@@ -1,0 +1,279 @@
+"""DXT1a (BC1) encoder vectorised with numpy, plus the .dds container.
+
+DXT1 guarda cada bloque de 4x4 pixeles en 8 bytes: dos colores RGB565 y
+16 indices de 2 bits. El bloque tiene dos modos, y cual se usa se decide
+comparando los dos colores como enteros sin signo:
+
+    color0 >  color1  -> 4 colores opacos
+                         p2 = (2*c0 + c1)/3 , p3 = (c0 + 2*c1)/3
+    color0 <= color1  -> 3 colores + punchthrough  ("la 'a' de DXT1a")
+                         p2 = (c0 + c1)/2   , p3 = transparente
+
+O sea que DXT1a no es un formato aparte: es DXT1 usando el segundo modo en
+los bloques que tienen pixeles transparentes. Por eso el FourCC sigue
+siendo 'DXT1'.
+
+El ajuste de color por bloque usa el eje principal (power iteration sobre
+la covarianza de los 16 pixeles), que se porta bastante mejor que un
+bounding box en degradados -- justo lo que abunda en un fondo de tema.
+"""
+
+from __future__ import annotations
+
+import struct
+
+import numpy as np
+
+#: Below this alpha a pixel counts as transparent (punchthrough).
+ALPHA_THRESHOLD = 128
+
+_POWER_ITERATIONS = 8
+
+
+def _quantize_565(colors: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Packs 0..255 colours into RGB565 and also returns the colour
+    que el decodificador va a reconstruir a partir de el.
+
+    Devolver el color reconstruido importa: los indices se tienen que elegir
+    contra la paleta real que vera la consola, no contra la ideal.
+    """
+    c = np.clip(colors, 0.0, 255.0)
+    r5 = np.rint(c[..., 0] * (31.0 / 255.0)).astype(np.uint32)
+    g6 = np.rint(c[..., 1] * (63.0 / 255.0)).astype(np.uint32)
+    b5 = np.rint(c[..., 2] * (31.0 / 255.0)).astype(np.uint32)
+
+    packed = (r5 << 11) | (g6 << 5) | b5
+
+    # Expansion by replicating the high bits, the way the hardware does.
+    dequant = np.empty(c.shape, dtype=np.float32)
+    dequant[..., 0] = (r5 << 3) | (r5 >> 2)
+    dequant[..., 1] = (g6 << 2) | (g6 >> 4)
+    dequant[..., 2] = (b5 << 3) | (b5 >> 2)
+    return packed.astype(np.uint32), dequant
+
+
+def _principal_axis(centered: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    """Axis of greatest variance per block, via power iteration.
+
+    `centered` es (N, 16, 3) ya restada la media; `weights` (N, 16) pone en
+    cero los pixeles transparentes para que no arrastren los extremos.
+    """
+    w = centered * weights[..., None]
+    cov = np.einsum("nij,nik->njk", w, w, optimize=True)  # (N, 3, 3)
+
+    # Starting from the bounding box diagonal converges in a few rounds and
+    # avoids the pathological case of an initial vector orthogonal to the axis.
+    axis = w.max(axis=1) - w.min(axis=1)
+    norm = np.linalg.norm(axis, axis=1, keepdims=True)
+    axis = np.where(norm > 1e-6, axis / np.maximum(norm, 1e-9), np.array([1.0, 0.0, 0.0], np.float32))
+
+    for _ in range(_POWER_ITERATIONS):
+        axis = np.einsum("nij,nj->ni", cov, axis, optimize=True)
+        norm = np.linalg.norm(axis, axis=1, keepdims=True)
+        # Flat colour block: covariance is zero and the axis does not matter.
+        axis = np.where(norm > 1e-9, axis / np.maximum(norm, 1e-12), np.array([1.0, 0.0, 0.0], np.float32))
+
+    return axis.astype(np.float32)
+
+
+def compress_dxt1a(rgba: np.ndarray) -> bytes:
+    """Comprime una imagen RGBA (H, W, 4) uint8 a bloques DXT1a crudos."""
+    if rgba.ndim != 3 or rgba.shape[2] != 4:
+        raise ValueError(f"expected (H, W, 4) uint8, got {rgba.shape}")
+
+    height, width = rgba.shape[:2]
+    pad_h = (-height) % 4
+    pad_w = (-width) % 4
+    if pad_h or pad_w:
+        # Replicating the edge instead of padding with black keeps the last
+        # block from dragging the colour fit toward a colour not in the image.
+        rgba = np.pad(rgba, ((0, pad_h), (0, pad_w), (0, 0)), mode="edge")
+        height, width = rgba.shape[:2]
+
+    bh, bw = height // 4, width // 4
+    blocks = (
+        rgba.reshape(bh, 4, bw, 4, 4)
+        .transpose(0, 2, 1, 3, 4)
+        .reshape(-1, 16, 4)
+    )
+    n = blocks.shape[0]
+
+    colors = blocks[..., :3].astype(np.float32)
+    opaque = blocks[..., 3] >= ALPHA_THRESHOLD          # (N, 16)
+    weights = opaque.astype(np.float32)
+    opaque_count = weights.sum(axis=1)                   # (N,)
+
+    # A block needs punchthrough mode if any of its pixels is transparent.
+    needs_alpha = ~opaque.all(axis=1)
+    all_clear = opaque_count == 0
+
+    # Media solo sobre pixeles opacos (evita division por cero en bloques vacios).
+    safe_count = np.maximum(opaque_count, 1.0)[:, None]
+    mean = (colors * weights[..., None]).sum(axis=1) / safe_count   # (N, 3)
+
+    centered = colors - mean[:, None, :]
+    axis = _principal_axis(centered, weights)
+
+    # Projection onto the axis; transparent pixels are kept out of the min/max
+    # by neutralising them with the opposite extreme (cheaper than using NaN).
+    proj = np.einsum("nij,nj->ni", centered, axis, optimize=True)    # (N, 16)
+    big = np.float32(np.inf)
+    t_min = np.where(opaque, proj, big).min(axis=1)
+    t_max = np.where(opaque, proj, -big).max(axis=1)
+    # Fully transparent block: there is no colour to fit, so both
+    # extremos colapsan en 0 y eso deja packed0 == packed1 (modo 3 colores).
+    t_min = np.where(all_clear, 0.0, t_min)
+    t_max = np.where(all_clear, 0.0, t_max)
+
+    end_a = mean + t_max[:, None] * axis
+    end_b = mean + t_min[:, None] * axis
+
+    packed_a, color_a = _quantize_565(end_a)
+    packed_b, color_b = _quantize_565(end_b)
+
+    # Order the endpoints according to the mode each block needs.
+    #   opaco        -> queremos packed0 >  packed1 (4 colores)
+    #   punchthrough -> queremos packed0 <= packed1 (3 colores + alpha)
+    want_greater = ~needs_alpha
+    is_greater = packed_a > packed_b
+    swap = np.where(want_greater, ~is_greater, is_greater)
+
+    packed0 = np.where(swap, packed_b, packed_a)
+    packed1 = np.where(swap, packed_a, packed_b)
+    color0 = np.where(swap[:, None], color_b, color_a)
+    color1 = np.where(swap[:, None], color_a, color_b)
+
+    # A flat colour block lands on packed0 == packed1, i.e. 3-colour mode.
+    # That is fine: all three entries are the same colour and no opaque pixel
+    # picks index 3.
+    four_color = packed0 > packed1
+
+    palette = np.empty((n, 4, 3), dtype=np.float32)
+    palette[:, 0] = color0
+    palette[:, 1] = color1
+    palette[:, 2] = np.where(
+        four_color[:, None],
+        (2.0 * color0 + color1) / 3.0,
+        (color0 + color1) / 2.0,
+    )
+    palette[:, 3] = np.where(four_color[:, None], (color0 + 2.0 * color1) / 3.0, 0.0)
+
+    # Squared distance from each pixel to each palette entry.
+    diff = colors[:, :, None, :] - palette[:, None, :, :]            # (N, 16, 4, 3)
+    dist = np.einsum("nikc,nikc->nik", diff, diff, optimize=True)    # (N, 16, 4)
+
+    # In 3-colour mode index 3 means "transparent", so an
+    # pixel opaco nunca lo puede elegir.
+    dist[:, :, 3] = np.where(four_color[:, None], dist[:, :, 3], np.inf)
+
+    indices = np.argmin(dist, axis=2).astype(np.uint32)              # (N, 16)
+    indices = np.where(opaque, indices, np.uint32(3))
+    if all_clear.any():
+        indices[all_clear] = 3
+
+    shifts = (2 * np.arange(16, dtype=np.uint32))[None, :]
+    bits = np.bitwise_or.reduce(indices << shifts, axis=1).astype(np.uint32)
+
+    out = np.empty((n, 8), dtype=np.uint8)
+    out[:, 0] = packed0 & 0xFF
+    out[:, 1] = (packed0 >> 8) & 0xFF
+    out[:, 2] = packed1 & 0xFF
+    out[:, 3] = (packed1 >> 8) & 0xFF
+    out[:, 4] = bits & 0xFF
+    out[:, 5] = (bits >> 8) & 0xFF
+    out[:, 6] = (bits >> 16) & 0xFF
+    out[:, 7] = (bits >> 24) & 0xFF
+    return out.tobytes()
+
+
+# --- Contenedor .dds ------------------------------------------------------
+
+_DDSD_CAPS = 0x1
+_DDSD_HEIGHT = 0x2
+_DDSD_WIDTH = 0x4
+_DDSD_PIXELFORMAT = 0x1000
+_DDSD_LINEARSIZE = 0x80000
+_DDPF_FOURCC = 0x4
+_DDSCAPS_TEXTURE = 0x1000
+
+
+def dds_header(width: int, height: int, linear_size: int) -> bytes:
+    """128-byte DDS header for a DXT1 texture without mipmaps."""
+    flags = _DDSD_CAPS | _DDSD_HEIGHT | _DDSD_WIDTH | _DDSD_PIXELFORMAT | _DDSD_LINEARSIZE
+    # 28 (7I) + 44 (reserved1) + 32 (pixelformat) + 16 (caps) + 4 = 124
+    return b"DDS " + struct.pack(
+        "<7I44xIII20xIIII4x",
+        124,            # dwSize
+        flags,
+        height,
+        width,
+        linear_size,    # dwPitchOrLinearSize
+        0,              # dwDepth
+        0,              # dwMipMapCount (sin flag DDSD_MIPMAPCOUNT => sin mipmaps)
+        32,             # DDS_PIXELFORMAT.dwSize
+        _DDPF_FOURCC,
+        # dwFourCC is split out so it reads as 4 chars, not an integer:
+        *struct.unpack("<I", b"DXT1"),
+        _DDSCAPS_TEXTURE,
+        0, 0, 0,        # dwCaps2..4
+    )
+
+
+def encode_dds(rgba: np.ndarray) -> bytes:
+    """Imagen RGBA -> archivo .dds completo (DXT1a, sin mipmaps)."""
+    height, width = rgba.shape[:2]
+    payload = compress_dxt1a(rgba)
+    return dds_header(width, height, len(payload)) + payload
+
+
+def decode_dds(data: bytes) -> np.ndarray:
+    """Decodes a DXT1/DXT1a .dds to RGBA. Used to verify the encoder."""
+    if data[:4] != b"DDS ":
+        raise ValueError("not a DDS file")
+    height, width = struct.unpack_from("<II", data, 12)
+    fourcc = data[84:88]
+    if fourcc != b"DXT1":
+        raise ValueError(f"expected DXT1, got {fourcc!r}")
+
+    bh, bw = (height + 3) // 4, (width + 3) // 4
+    raw = np.frombuffer(data, dtype=np.uint8, count=bh * bw * 8, offset=128)
+    blocks = raw.reshape(-1, 8)
+
+    p0 = blocks[:, 0].astype(np.uint32) | (blocks[:, 1].astype(np.uint32) << 8)
+    p1 = blocks[:, 2].astype(np.uint32) | (blocks[:, 3].astype(np.uint32) << 8)
+    bits = (
+        blocks[:, 4].astype(np.uint32)
+        | (blocks[:, 5].astype(np.uint32) << 8)
+        | (blocks[:, 6].astype(np.uint32) << 16)
+        | (blocks[:, 7].astype(np.uint32) << 24)
+    )
+
+    def unpack(p: np.ndarray) -> np.ndarray:
+        r5, g6, b5 = (p >> 11) & 0x1F, (p >> 5) & 0x3F, p & 0x1F
+        return np.stack(
+            [(r5 << 3) | (r5 >> 2), (g6 << 2) | (g6 >> 4), (b5 << 3) | (b5 >> 2)],
+            axis=-1,
+        ).astype(np.float32)
+
+    c0, c1 = unpack(p0), unpack(p1)
+    four = (p0 > p1)[:, None]
+
+    n = blocks.shape[0]
+    pal = np.empty((n, 4, 4), dtype=np.float32)
+    pal[:, 0, :3], pal[:, 1, :3] = c0, c1
+    pal[:, 2, :3] = np.where(four, (2 * c0 + c1) / 3.0, (c0 + c1) / 2.0)
+    pal[:, 3, :3] = np.where(four, (c0 + 2 * c1) / 3.0, 0.0)
+    pal[:, :, 3] = 255.0
+    pal[:, 3, 3] = np.where(four[:, 0], 255.0, 0.0)
+
+    idx = (bits[:, None] >> (2 * np.arange(16, dtype=np.uint32))[None, :]) & 0x3
+    px = np.take_along_axis(pal, idx[:, :, None], axis=1)  # (N, 16, 4)
+
+    out = (
+        np.rint(px)
+        .astype(np.uint8)
+        .reshape(bh, bw, 4, 4, 4)
+        .transpose(0, 2, 1, 3, 4)
+        .reshape(bh * 4, bw * 4, 4)
+    )
+    return out[:height, :width]

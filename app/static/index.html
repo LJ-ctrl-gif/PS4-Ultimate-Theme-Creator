@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PS4 Ultimate Theme Creator</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/i18n.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🎮</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark"></span>
+    <div>
+      <h1 data-i18n="app.name">PS4 Ultimate Theme Creator</h1>
+      <p class="brand-sub">
+        <span data-i18n="app.sub"></span>
+        <span class="byline">
+          <span data-i18n="app.by"></span>
+          <a href="https://github.com/Imxnxl" target="_blank" rel="noopener noreferrer">Imxnxl</a>
+        </span>
+      </p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div id="sysinfo" class="sysinfo"></div>
+    <select id="lang-select" class="select lang-select" data-i18n-attr="aria-label:lang.label">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+    </select>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab is-active" data-tab="backgrounds" role="tab" data-i18n="tab.backgrounds"></button>
+  <button class="tab" data-tab="icons" role="tab" data-i18n="tab.icons"></button>
+  <button class="tab" data-tab="sounds" role="tab" data-i18n="tab.sounds"></button>
+  <button class="tab" data-tab="preview" role="tab" data-i18n="tab.preview"></button>
+  <button class="tab" data-tab="package" role="tab" data-i18n="tab.package"></button>
+</nav>
+
+<main>
+
+  <!-- ================= FONDO (estático o animado) ================= -->
+  <section class="panel is-active" id="panel-backgrounds">
+
+    <div class="mode-switch" role="radiogroup" data-i18n-attr="aria-label:bg.mode.aria">
+      <label class="mode-opt">
+        <input type="radio" name="bgmode" value="static" id="bgmode-static" checked>
+        <span class="mode-face">
+          <b data-i18n="bg.static"></b>
+          <em data-i18n="bg.static.hint"></em>
+        </span>
+      </label>
+      <label class="mode-opt">
+        <input type="radio" name="bgmode" value="animated" id="bgmode-animated">
+        <span class="mode-face">
+          <b data-i18n="bg.animated"></b>
+          <em data-i18n="bg.animated.hint"></em>
+        </span>
+      </label>
+    </div>
+
+    <!-- ---- modo animado ---- -->
+    <div id="bg-animated" hidden>
+
+      <div id="anim-drop" class="dropzone">
+        <input type="file" id="anim-file" accept="video/*,.gif,.mp4,.mov,.mkv,.webm,.avi,.m4v">
+        <div class="dz-inner">
+          <div class="dz-icon"></div>
+          <p class="dz-title" data-i18n="bg.drop.title"></p>
+          <p class="dz-hint" data-i18n="bg.drop.hint"></p>
+        </div>
+      </div>
+
+      <div id="anim-workspace" class="workspace" hidden>
+
+        <div class="stage-col">
+          <div class="stage">
+            <canvas id="anim-canvas" width="1280" height="720"></canvas>
+            <div id="anim-stage-badge" class="stage-badge">1280 × 720</div>
+            <div id="anim-loading" class="stage-loading" hidden><span class="spinner"></span></div>
+          </div>
+
+          <div class="transport">
+            <button id="anim-play" class="btn btn-icon"
+                    data-i18n-attr="title:bg.play.title, aria-label:bg.play.aria">
+              <span class="ico-pause"></span>
+            </button>
+            <input type="range" id="anim-scrub" class="scrub" min="0" max="0" value="0" step="1">
+            <div class="transport-read">
+              <span id="anim-frame-read">00</span><span class="dim">/<span id="anim-frame-total">00</span></span>
+            </div>
+          </div>
+
+          <div class="timing-read">
+            <span><b id="anim-loop-secs">—</b> <span data-i18n="bg.perloop"></span></span>
+            <span class="dim">·</span>
+            <span><b id="anim-eff-fps">—</b> <span data-i18n="bg.efffps"></span></span>
+            <span class="dim">·</span>
+            <span><b id="anim-per-frame">—</b> <span data-i18n="bg.perframe"></span></span>
+          </div>
+        </div>
+
+        <aside class="controls">
+
+          <div class="src-card">
+            <div class="src-name" id="anim-src-name">—</div>
+            <div class="src-meta" id="anim-src-meta">—</div>
+          </div>
+
+          <div class="ctl">
+            <label class="ctl-head" for="anim-size"><span data-i18n="bg.resolution"></span></label>
+            <select id="anim-size" class="select"></select>
+            <p class="ctl-note" id="anim-size-note"></p>
+          </div>
+
+          <div class="ctl">
+            <label class="ctl-head">
+              <span data-i18n="bg.frames"></span>
+              <output id="anim-frames-out">13</output>
+            </label>
+            <input type="range" id="anim-frames" min="2" max="13" value="13" step="1">
+          </div>
+
+          <div class="ctl">
+            <label class="ctl-head">
+              <span data-i18n="bg.wait"></span>
+              <output id="anim-wait-out">0.10</output>
+            </label>
+            <input type="range" id="anim-wait" min="0.02" max="5" value="0.1" step="0.01">
+            <p class="ctl-note"><b id="anim-wait-ms">100</b> <span data-i18n="bg.wait.note"></span></p>
+          </div>
+
+          <div class="budget">
+            <div class="budget-head">
+              <span><span data-i18n="bg.budget"></span> <code>background.raf</code></span>
+              <span id="budget-figure">—</span>
+            </div>
+            <div class="budget-track">
+              <div id="budget-fill" class="budget-fill"></div>
+            </div>
+            <p class="budget-note" id="budget-note"></p>
+          </div>
+
+          <div class="ctl" id="backend-row" hidden>
+            <label class="ctl-head"><span data-i18n="bg.encoder"></span></label>
+            <select id="anim-backend" class="select"></select>
+          </div>
+
+          <button id="anim-export" class="btn btn-primary btn-block">
+            <span data-i18n="bg.export"></span> <span class="dim">background.raf.zip</span>
+          </button>
+
+          <button id="anim-reset" class="btn btn-ghost btn-block" data-i18n="bg.change"></button>
+
+          <div id="anim-result" class="result" hidden></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ---- huecos de imagen ---- -->
+    <p class="panel-lead" id="slots-lead" data-i18n-html="bg.slots.lead"></p>
+    <p class="warn-banner" id="slots-raf-note" data-i18n-html="bg.slots.raf" hidden></p>
+    <div class="slot-grid" id="grid-background"></div>
+  </section>
+
+  <!-- ================= ICONOS ================= -->
+  <section class="panel" id="panel-icons">
+    <div class="slot-toolbar">
+      <label class="btn btn-ghost">
+        <span data-i18n="icons.bulkFn"></span>
+        <input type="file" id="bulk-fn" accept="image/*" hidden>
+      </label>
+      <label class="btn btn-ghost">
+        <span data-i18n="icons.bulkCt"></span>
+        <input type="file" id="bulk-ct" accept="image/*" hidden>
+      </label>
+      <button id="clear-icons" class="btn btn-ghost" data-i18n="icons.clear"></button>
+    </div>
+    <h2 class="group-title"><span data-i18n="icons.function"></span> <span class="dim">128×128 + glow 152×152</span></h2>
+    <div class="slot-grid slot-grid-sm" id="grid-function_icon"></div>
+    <h2 class="group-title"><span data-i18n="icons.content"></span> <span class="dim">512×512</span></h2>
+    <div class="slot-grid slot-grid-sm" id="grid-content_icon"></div>
+  </section>
+
+  <!-- ================= SONIDOS ================= -->
+  <section class="panel" id="panel-sounds">
+    <h2 class="group-title"><span data-i18n="snd.music"></span> <span class="dim">sound/bgm_home.at9</span></h2>
+    <div class="card" id="bgm-card">
+      <p class="card-note" style="margin-top:0">
+        <span id="bgm-note"></span>
+      </p>
+      <div class="bgm-row">
+        <label class="btn btn-ghost">
+          <span id="bgm-btn-label" data-i18n="snd.pick"></span>
+          <input type="file" id="bgm-file" accept=".at9" hidden>
+        </label>
+        <button id="bgm-clear" class="btn btn-ghost" data-i18n="snd.remove" hidden></button>
+        <span id="bgm-info" class="bgm-info" data-i18n="snd.none"></span>
+      </div>
+
+      <div class="ctl" id="bgm-gain-row" hidden>
+        <label class="ctl-head" for="bgm-gain">
+          <span data-i18n="snd.volume"></span>
+          <output id="bgm-gain-out">0.0 dB</output>
+        </label>
+        <input type="range" id="bgm-gain" min="-24" max="12" value="0" step="0.5">
+        <p class="ctl-note" id="bgm-gain-note"></p>
+      </div>
+    </div>
+
+    <h2 class="group-title"><span data-i18n="snd.sfx"></span> <span class="dim" data-i18n="snd.sfx.when"></span></h2>
+    <div class="card">
+      <p class="card-note" style="margin-top:0" data-i18n="snd.sfx.trim"></p>
+      <div id="sfx-rows"></div>
+    </div>
+  </section>
+
+  <!-- ================= VISTA PREVIA ================= -->
+  <section class="panel" id="panel-preview">
+    <p class="panel-lead" data-i18n="pv.lead"></p>
+
+    <div class="mode-switch" role="radiogroup" data-i18n-attr="aria-label:pv.aria">
+      <label class="mode-opt">
+        <input type="radio" name="pvview" value="home" id="pvview-home" checked>
+        <span class="mode-face">
+          <b data-i18n="pv.home"></b>
+          <em data-i18n="pv.home.hint"></em>
+        </span>
+      </label>
+      <label class="mode-opt">
+        <input type="radio" name="pvview" value="function" id="pvview-function">
+        <span class="mode-face">
+          <b data-i18n="pv.func"></b>
+          <em data-i18n="pv.func.hint"></em>
+        </span>
+      </label>
+      <label class="mode-opt">
+        <input type="radio" name="pvview" value="apply" id="pvview-apply">
+        <span class="mode-face">
+          <b data-i18n="pv.apply"></b>
+          <em data-i18n="pv.apply.hint"></em>
+        </span>
+      </label>
+    </div>
+
+    <div class="pv-stage" id="pv-stage">
+      <div class="pv-empty" id="pv-empty" data-i18n="pv.empty"></div>
+      <img class="pv-bg" id="pv-bg" alt="" hidden>
+      <canvas class="pv-bg" id="pv-canvas" width="1280" height="720" hidden></canvas>
+      <div class="pv-tint" id="pv-tint"></div>
+
+      <!-- pantalla principal -->
+      <div class="pv-screen" id="pv-home">
+        <div class="pv-top">
+          <div class="pv-fnrow" id="pv-fnrow"></div>
+          <div class="pv-status">
+            <span id="pv-user">PSN-ID</span>
+            <span class="pv-clock">12:34</span>
+          </div>
+        </div>
+        <div class="pv-content">
+          <div class="pv-tiles" id="pv-tiles"></div>
+          <div class="pv-tilename" id="pv-tilename">—</div>
+          <div class="pv-tiledesc"><i></i><span id="pv-tiledesc">—</span></div>
+        </div>
+      </div>
+
+      <!-- menu superior -->
+      <div class="pv-screen" id="pv-func" hidden>
+        <div class="pv-funcrow" id="pv-funcrow"></div>
+      </div>
+
+      <!-- pantalla de aplicar el tema (Ajustes > Temas) -->
+      <div class="pv-screen pv-apply" id="pv-apply" hidden>
+        <div class="pv-ap-title" id="pv-ap-title">—</div>
+        <div class="pv-ap-rule pv-ap-rule-top"></div>
+        <img class="pv-ap-panel pv-ap-shot" id="pv-ap-shot" alt="">
+        <div class="pv-ap-panel pv-ap-settings" id="pv-ap-settings">
+          <div class="pv-ap-set-head" data-i18n="pv.settings"></div>
+          <div class="pv-ap-set-rows" id="pv-ap-rows"></div>
+          <svg class="pv-ap-wave" viewBox="0 0 740 418" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M740 190 C 560 250, 470 330, 300 418 L740 418 Z" opacity=".22" fill="#fff"/>
+            <path d="M740 250 C 590 300, 520 360, 400 418 L740 418 Z" opacity=".16" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="pv-ap-btn" data-i18n="pv.applyBtn"></div>
+        <div class="pv-ap-rule pv-ap-rule-bottom"></div>
+      </div>
+    </div>
+
+    <p class="ctl-note" id="pv-note"></p>
+  </section>
+
+  <!-- ================= EMPAQUETAR ================= -->
+  <section class="panel" id="panel-package">
+    <div id="pkg-missing" class="notice notice-warn" data-i18n="pkg.missing" hidden></div>
+
+    <div class="workspace">
+      <div class="stage-col">
+
+        <div class="card">
+          <h2 class="card-title" data-i18n="pkg.assets"></h2>
+          <ul class="checklist" id="pkg-checklist"></ul>
+          <p class="card-note" data-i18n="pkg.assets.note"></p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title" data-i18n="pkg.contents"></h2>
+          <p class="card-note" style="margin-top:0" data-i18n="pkg.contents.note"></p>
+          <div class="tree" id="pkg-tree"></div>
+        </div>
+
+        <div id="pkg-result" class="card" hidden></div>
+      </div>
+
+      <aside class="controls">
+        <div class="ctl">
+          <label class="ctl-head" for="pkg-title"><span data-i18n="pkg.title"></span></label>
+          <input type="text" id="pkg-title" class="field" maxlength="128" placeholder="My Theme">
+        </div>
+
+        <div class="ctl">
+          <label class="ctl-head" for="pkg-title-id"><span>Title ID</span></label>
+          <input type="text" id="pkg-title-id" class="field mono" maxlength="9" placeholder="CUSA00000">
+          <p class="ctl-note" data-i18n="pkg.titleId.note"></p>
+        </div>
+
+        <div class="ctl">
+          <label class="ctl-head" for="pkg-content-id"><span data-i18n="pkg.contentId"></span></label>
+          <input type="text" id="pkg-content-id" class="field mono" maxlength="36">
+          <p class="ctl-note" data-i18n="pkg.contentId.note"></p>
+        </div>
+
+        <div class="ctl">
+          <label class="ctl-head" for="pkg-themecolor">
+            <span data-i18n="pkg.color"></span>
+            <span class="swatch" id="pkg-themecolor-swatch"></span>
+          </label>
+          <select id="pkg-themecolor" class="select"></select>
+          <p class="ctl-note" data-i18n-html="pkg.color.note"></p>
+        </div>
+
+        <div class="ctl">
+          <label class="ctl-head"><span data-i18n="pkg.textColors"></span></label>
+          <div class="color-row">
+            <label><input type="color" id="pkg-fontcolor"><span data-i18n="pkg.text"></span></label>
+            <label><input type="color" id="pkg-fontshadow"><span data-i18n="pkg.shadow"></span></label>
+            <label><input type="color" id="pkg-focuscolor"><span data-i18n="pkg.focus"></span></label>
+          </div>
+        </div>
+
+        <div class="fact">
+          <span data-i18n="pkg.format"></span><b id="pkg-fixed-fmt">—</b>
+        </div>
+        <div class="fact">
+          <span data-i18n="pkg.passcode"></span><b class="mono" data-i18n="pkg.passcode.value"></b>
+        </div>
+        <p class="ctl-note" data-i18n-html="pkg.fixed.note"></p>
+
+        <button id="pkg-build" class="btn btn-primary btn-block" data-i18n="pkg.build"></button>
+        <p class="ctl-note" id="pkg-hint"></p>
+      </aside>
+    </div>
+  </section>
+
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

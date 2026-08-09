@@ -1,0 +1,950 @@
+/* Paleta inspirada en la interfaz de la PS4: azul marino profundo con la luz
+   cayendo desde arriba, paneles que flotan encima y el azul de PlayStation
+   como acento.
+   Los grises de texto se subieron bastante respecto a la version anterior
+   (--txt-dim era #8695ad y --txt-faint #5a6880): sobre este fondo se leian
+   mal, que era la queja principal. */
+:root {
+  --bg:        #0a1420;
+  --bg-raised: #16273a;
+  --bg-float:  #1b3049;   /* un escalon por encima: tarjetas y menus */
+  --bg-sunken: #071019;
+  --line:      #274563;
+  --line-soft: #1d3450;
+  --txt:       #f2f7fd;
+  --txt-dim:   #b3c6da;
+  --txt-faint: #8ba3bc;
+  --accent:    #1e9bff;   /* azul PlayStation */
+  --accent-dk: #0a6fd0;
+  --accent-glow: #1e9bff44;
+  --ok:        #3ddc9a;
+  --warn:      #ffb43d;
+  --danger:    #ff6b6b;
+  --radius:    14px;
+  --radius-sm: 9px;
+}
+
+* { box-sizing: border-box; }
+
+/* El [hidden] del navegador lo pisa cualquier regla de clase que fije display
+   (.workspace usa grid, .tree-row usa flex), asi que hay que reforzarlo o los
+   elementos ocultos se siguen viendo. */
+[hidden] { display: none !important; }
+
+/* El degradado va en <html>, no en <body>: con scroll, el body no llega hasta
+   abajo y asomaba una banda del color por defecto del navegador. */
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(1100px 520px at 50% -8%, #1c4472 0%, transparent 68%),
+    linear-gradient(180deg, #0e1f33 0%, var(--bg) 46%) fixed;
+  background-color: var(--bg);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: none;
+  color: var(--txt);
+  /* La PS4 usa SST, tipografia propietaria de Sony. Se imita el aire con la
+     pila del sistema en vez de empaquetar una fuente que no es nuestra. */
+  font: 15.5px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui,
+        -apple-system, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+code {
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  font-size: .92em;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  padding: .05em .35em;
+}
+
+b { font-weight: 600; }
+.dim { color: var(--txt-faint); font-weight: 400; }
+
+/* ---------- topbar ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #0f2135, var(--bg));
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-mark {
+  width: 38px; height: 38px; flex: none;
+  border-radius: 10px;
+  background: linear-gradient(145deg, var(--accent), #5b6bff);
+  box-shadow: 0 0 0 1px #ffffff14, 0 6px 18px #1e9bff40;
+  position: relative;
+}
+.brand-mark::after {
+  content: "";
+  position: absolute; inset: 11px 10px;
+  border: 2px solid #fff; border-radius: 2px;
+  opacity: .9;
+}
+.topbar h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: .2px; }
+.brand-sub { margin: 2px 0 0; font-size: 14px; color: var(--txt-dim); }
+
+.sysinfo { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  color: var(--txt-dim);
+}
+.pill::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--txt-faint);
+}
+.pill.ok::before { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.pill.off::before { background: var(--txt-faint); }
+
+/* ---------- tabs ---------- */
+.tabs {
+  display: flex; gap: 2px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.tab {
+  appearance: none; border: 0; background: none;
+  color: var(--txt-dim);
+  font: inherit; font-size: 15px;
+  padding: 13px 18px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.tab:hover { color: var(--txt); }
+.tab.is-active { color: var(--txt); border-bottom-color: var(--accent); }
+
+/* ---------- layout ---------- */
+main { padding: 26px 28px 60px; max-width: 1500px; margin: 0 auto; }
+.panel { display: none; }
+.panel.is-active { display: block; }
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 410px;
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- dropzone ---------- */
+.dropzone {
+  position: relative;
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  padding: 92px 24px;
+  text-align: center;
+  transition: border-color .15s, background .15s, transform .15s;
+  cursor: pointer;
+}
+.dropzone:hover { border-color: #38618c; background: #132539; }
+.dropzone.is-over {
+  border-color: var(--accent);
+  background: #152c46;
+  transform: scale(1.004);
+}
+.dropzone input[type=file] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.dz-icon {
+  width: 46px; height: 34px; margin: 0 auto 16px;
+  border: 2px solid var(--txt-faint); border-radius: 6px;
+  position: relative;
+}
+.dz-icon::before {
+  content: ""; position: absolute;
+  left: 50%; top: 50%; transform: translate(-40%, -50%);
+  border-left: 11px solid var(--txt-faint);
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+}
+.dz-title { margin: 0; font-size: 17px; font-weight: 500; }
+.dz-hint { margin: 6px 0 0; font-size: 14px; color: var(--txt-dim); }
+
+/* ---------- stage ---------- */
+.stage {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  aspect-ratio: 16 / 9;
+  display: grid; place-items: center;
+}
+.stage canvas, .stage img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.stage-badge {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 12.5px; letter-spacing: .4px;
+  padding: 4px 9px; border-radius: 6px;
+  background: #000000d6; color: var(--txt);
+  backdrop-filter: blur(4px);
+  border: 1px solid #ffffff20;
+}
+.stage-loading {
+  position: absolute; inset: 0;
+  background: #060911cc;
+  display: grid; place-items: center;
+  backdrop-filter: blur(2px);
+}
+.spinner {
+  width: 30px; height: 30px;
+  border: 3px solid #ffffff1f;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- transport ---------- */
+.transport {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 14px;
+}
+.transport-read {
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  font-size: 14px; color: var(--txt-dim);
+  min-width: 56px; text-align: right;
+}
+.timing-read {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-top: 10px; font-size: 14px; color: var(--txt-dim);
+}
+.timing-read b { color: var(--txt); }
+
+/* ---------- controls ---------- */
+.controls {
+  display: flex; flex-direction: column; gap: 22px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px;
+}
+.src-card {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.src-name {
+  font-size: 15px; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.src-meta { font-size: 13.5px; color: var(--txt-faint); margin-top: 3px; }
+
+.ctl-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 14px; color: var(--txt-dim);
+  margin-bottom: 9px;
+}
+.ctl-head output {
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  font-size: 17px; font-weight: 600; color: var(--txt);
+}
+.ctl-note { margin: 8px 0 0; font-size: 13px; color: var(--txt-faint); line-height: 1.45; }
+.ctl-note.warn { color: var(--warn); }
+.ctl-note.danger { color: var(--danger); }
+
+/* range inputs */
+input[type=range] {
+  appearance: none; width: 100%; height: 4px;
+  background: var(--line); border-radius: 999px; outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--txt);
+  border: 3px solid var(--accent);
+  box-shadow: 0 1px 5px #0009;
+  transition: transform .12s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type=range]::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--txt); border: 3px solid var(--accent);
+}
+input[type=range]:disabled { opacity: .45; cursor: default; }
+.scrub { flex: 1; }
+
+/* Marca del tope de 16MB sobre el slider de frames. Va aqui y no en la barra
+   de tamano porque ahi el limite ya es el borde derecho: la marca solo
+   significa algo en la escala de frames. */
+.select {
+  width: 100%; padding: 8px 10px;
+  background: var(--bg-sunken); color: var(--txt);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  font: inherit; font-size: 14.5px;
+}
+
+/* ---------- budget bar ---------- */
+.budget {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 16px;
+}
+.budget-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 14px; color: var(--txt-dim); margin-bottom: 9px;
+  gap: 8px;
+}
+#budget-figure {
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  color: var(--txt); font-size: 14px; white-space: nowrap;
+}
+.budget-track {
+  position: relative;
+  height: 9px; border-radius: 999px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-soft);
+  overflow: hidden;
+}
+.budget-fill {
+  height: 100%; width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1f8f66, var(--ok));
+  transition: width .22s ease, background .22s;
+}
+.budget-fill.warn { background: linear-gradient(90deg, #b57722, var(--warn)); }
+.budget-fill.danger { background: linear-gradient(90deg, #a83b3b, var(--danger)); }
+.budget-note { margin: 9px 0 0; font-size: 13px; color: var(--txt-faint); line-height: 1.45; }
+.budget-note.danger { color: var(--danger); }
+
+/* ---------- facts ---------- */
+.fact {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 10px; font-size: 14px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.fact span { color: var(--txt-dim); }
+.fact b { font-weight: 500; }
+
+/* ---------- buttons ---------- */
+.btn {
+  appearance: none; font: inherit; font-size: 15px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--bg-sunken); color: var(--txt);
+  padding: 10px 16px; cursor: pointer;
+  transition: background .14s, border-color .14s, opacity .14s;
+}
+.btn:hover:not(:disabled) { background: #1c3049; border-color: #38618c; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-block { width: 100%; }
+.btn-primary {
+  background: var(--accent); border-color: var(--accent);
+  font-weight: 500;
+  box-shadow: 0 4px 14px #1e9bff3a;
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-dk); border-color: var(--accent-dk); }
+.btn-primary .dim { color: #ffffff9c; }
+.btn-ghost { background: none; }
+.btn-icon {
+  width: 40px; height: 40px; flex: none;
+  display: grid; place-items: center; padding: 0;
+}
+.ico-play, .ico-pause { display: block; }
+.ico-play {
+  width: 0; height: 0; margin-left: 3px;
+  border-left: 11px solid var(--txt);
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+}
+.ico-pause {
+  width: 11px; height: 13px;
+  border-left: 3.5px solid var(--txt);
+  border-right: 3.5px solid var(--txt);
+}
+
+/* ---------- result ---------- */
+.result {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 16px;
+  font-size: 14px;
+}
+.result-ok { color: var(--ok); font-weight: 500; margin: 0 0 10px; }
+.result-rows { display: grid; gap: 5px; margin-bottom: 14px; }
+.result-row { display: flex; justify-content: space-between; gap: 10px; color: var(--txt-dim); }
+.result-row b { color: var(--txt); font-weight: 500; }
+.result pre {
+  margin: 0 0 14px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  font-size: 12.5px; line-height: 1.55;
+  color: var(--txt-dim);
+  max-height: 190px; overflow: auto;
+  white-space: pre;
+}
+.dl-btn {
+  display: block; text-align: center; text-decoration: none;
+  background: var(--ok); color: #06231a;
+  font-weight: 600; padding: 11px; border-radius: var(--radius-sm);
+  transition: filter .14s;
+}
+.dl-btn:hover { filter: brightness(1.08); }
+
+/* ---------- icon tab ---------- */
+.icon-stage {
+  display: flex; gap: 30px; align-items: flex-end; flex-wrap: wrap;
+  padding: 40px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.icon-shot { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.icon-shot img {
+  display: block; border-radius: 6px;
+  background:
+    repeating-conic-gradient(#1a2233 0% 25%, #131a28 0% 50%) 50% / 16px 16px;
+  image-rendering: pixelated;
+}
+.icon-cap { font-size: 13px; color: var(--txt-faint); }
+
+/* ---------- empaquetar ---------- */
+.card {
+  background: linear-gradient(180deg, #ffffff0a, transparent 60%), var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 30px #00000047;
+}
+.card-title { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+.card-note { margin: 12px 0 0; font-size: 13px; color: var(--txt-faint); line-height: 1.5; }
+
+.notice {
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 14.5px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+}
+.notice-warn { border-left-color: var(--warn); background: #201a10; color: #e8d5b5; }
+
+.checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
+.checklist li {
+  display: flex; align-items: center; gap: 13px;
+  font-size: 15.5px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.checklist li:last-child { border-bottom: 0; padding-bottom: 0; }
+.checklist .mark {
+  width: 21px; height: 21px; flex: none;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+  border: 1.5px solid var(--line);
+  color: var(--txt-faint);
+}
+.checklist .on .mark { background: var(--ok); border-color: var(--ok); color: #06231a; }
+.checklist .off { color: var(--txt-faint); }
+.checklist .detail { margin-left: auto; font-size: 14px; color: var(--txt-faint); }
+
+.tree { display: grid; gap: 10px; font-size: 14.5px; }
+.tree-row { display: flex; align-items: center; gap: 10px; }
+.tree-k {
+  color: var(--txt-dim); min-width: 190px;
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  font-size: 13px;
+}
+.tree-k i { color: var(--txt-faint); font-style: normal; }
+.tree-fixed code { color: var(--txt-faint); }
+.tree-in {
+  flex: 1; min-width: 0;
+  background: var(--bg-sunken); color: var(--txt);
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 9px;
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  font-size: 13px;
+}
+.tree-in:focus { outline: none; border-color: var(--accent); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chips label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13.5px; padding: 6px 11px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--bg-sunken); color: var(--txt-dim);
+  cursor: pointer; user-select: none;
+  transition: border-color .14s, color .14s, background .14s;
+}
+.chips label:hover { border-color: #38618c; color: var(--txt); }
+.chips input { accent-color: var(--accent); margin: 0; }
+.chips input:checked + span { color: var(--txt); }
+.chips label:has(input:checked) { border-color: var(--accent); background: #152c46; }
+
+.color-row { display: flex; gap: 10px; }
+.color-row label {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  font-size: 12.5px; color: var(--txt-faint);
+}
+.color-row input[type=color] {
+  width: 100%; height: 30px; padding: 0;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line); border-radius: 6px;
+  cursor: pointer;
+}
+
+.field {
+  width: 100%; padding: 12px 14px;
+  background: var(--bg-sunken); color: var(--txt);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  font: inherit; font-size: 14.5px;
+}
+.field:focus { outline: none; border-color: var(--accent); }
+.field.mono { font-family: "Cascadia Code", ui-monospace, Consolas, monospace; font-size: 14.5px; }
+.field.small { font-size: 13.5px; }
+.field.bad { border-color: var(--danger); }
+
+.log {
+  margin: 14px 0 0;
+  display: grid; gap: 6px;
+}
+.log-step {
+  display: flex; gap: 10px; align-items: baseline;
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  font-size: 12.5px;
+  color: var(--txt-dim);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  padding: 7px 10px;
+}
+.log-step b { color: var(--txt); font-weight: 500; min-width: 96px; }
+.log-step .secs { margin-left: auto; color: var(--txt-faint); }
+
+/* ---------- toast ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: 26px;
+  transform: translateX(-50%);
+  background: #1a2131; color: var(--txt);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-size: 14.5px; max-width: min(680px, calc(100vw - 40px));
+  box-shadow: 0 12px 34px #000a;
+  z-index: 50;
+  white-space: pre-wrap;
+  animation: toast-in .18s ease;
+}
+.toast.ok { border-left-color: var(--ok); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+}
+
+/* ---------- rejilla de slots ---------- */
+.panel-lead {
+  margin: 0 0 20px; font-size: 14.5px; color: var(--txt-dim);
+  max-width: 70ch; line-height: 1.6;
+}
+.group-title {
+  margin: 26px 0 14px; font-size: 15px; font-weight: 600;
+  display: flex; align-items: baseline; gap: 10px;
+}
+.group-title .dim { font-size: 13px; font-weight: 400; }
+
+.slot-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.slot-toolbar .btn { font-size: 14px; padding: 8px 14px; cursor: pointer; }
+
+.slot-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+.slot-grid-sm { grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); }
+
+.slot {
+  position: relative;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color .15s, background .15s;
+}
+.slot:hover { border-color: #38618c; }
+.slot.is-over { border-color: var(--accent); background: #152c46; }
+.slot.filled { border-color: #2f5f96; }
+.slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.slot-shot {
+  aspect-ratio: 16 / 9;
+  background:
+    repeating-conic-gradient(#161d2c 0% 25%, #111725 0% 50%) 50% / 14px 14px;
+  display: grid; place-items: center;
+  position: relative;
+}
+.slot-grid-sm .slot-shot { aspect-ratio: 1 / 1; }
+.slot-shot img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.slot-grid-sm .slot-shot img { width: 70%; height: 70%; }
+.slot-empty { font-size: 14px; color: var(--txt-faint); }
+/* Al llenarse se antepone un <img>; el texto de hueco vacio sobra. */
+.slot.filled .slot-empty { display: none; }
+
+.slot-meta { padding: 14px 16px; border-top: 1px solid var(--line-soft); }
+.slot-name { font-size: 15.5px; font-weight: 600; }
+.slot-sub {
+  font-size: 12.5px; color: var(--txt-faint); margin-top: 2px;
+  font-family: "Cascadia Code", ui-monospace, Consolas, monospace;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.slot-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 12px; padding: 3px 7px; border-radius: 5px;
+  background: #000000c0; color: var(--txt-dim); border: 1px solid #ffffff14;
+}
+.slot-badge.req { background: var(--accent); color: #fff; border-color: transparent; }
+.slot-badge.fb  { background: #2a2118; color: var(--warn); border-color: transparent; }
+
+/* Fondo tapado por la escena animada: se atenua y se dice por que. El hueco
+   sigue usable porque de la home salen la miniatura, el icono y el pic1. */
+.slot-raf-warn { display: none; }
+.slot.is-covered .slot-shot { opacity: .38; }
+.slot.is-covered .slot-raf-warn {
+  display: block; margin-top: 4px;
+  font-size: 12.5px; color: var(--warn);
+}
+
+.warn-banner {
+  margin: 0 0 14px; padding: 10px 13px;
+  background: #2a211880; border: 1px solid #6b512a; border-left-width: 3px;
+  border-radius: 7px; font-size: 14px; line-height: 1.5; color: var(--txt-dim);
+}
+.warn-banner b { color: var(--warn); font-weight: 600; }
+.slot-clear {
+  position: absolute; top: 8px; left: 8px;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 0; background: #000000c0; color: var(--txt);
+  font-size: 13.5px; line-height: 1; cursor: pointer;
+  display: none; place-items: center; z-index: 2;
+}
+.slot.filled .slot-clear { display: grid; }
+.slot-clear:hover { background: var(--danger); }
+
+.bgm-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bgm-row .btn { cursor: pointer; font-size: 14px; padding: 8px 14px; }
+.bgm-info { font-size: 14px; color: var(--txt-faint); }
+.bgm-info.on { color: var(--ok); }
+
+.sfx-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 9px 0; border-bottom: 1px solid var(--line-soft);
+}
+.sfx-row:last-child { border-bottom: 0; }
+.sfx-name { font-size: 14px; min-width: 130px; }
+.sfx-row .btn { cursor: pointer; font-size: 13.5px; padding: 6px 12px; }
+
+
+
+/* ---------- selector de tipo de fondo ---------- */
+/* Antes eran dos pestanas separadas ("Fondo animado" y "Fondos") y confundia:
+   se veia el fondo animado y justo despues un "fondo de la home" marcado como
+   obligatorio, sin que quedara claro que el animado tapa al fijo. Al ser una
+   eleccion explicita, el conflicto desaparece. */
+.mode-switch {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.mode-opt { cursor: pointer; }
+.mode-opt input { position: absolute; opacity: 0; pointer-events: none; }
+
+.mode-face {
+  display: block;
+  padding: 16px 18px 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #ffffff08, transparent 70%), var(--bg-raised);
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.mode-face b {
+  display: block; font-size: 16px; font-weight: 600; color: var(--txt-dim);
+  transition: color .15s;
+}
+.mode-face em {
+  display: block; margin-top: 4px;
+  font-style: normal; font-size: 13.5px; color: var(--txt-faint);
+  line-height: 1.5;
+}
+.mode-opt:hover .mode-face { border-color: #38618c; }
+
+/* Seleccionado: el azul de PlayStation, como el foco de la consola. */
+.mode-opt input:checked + .mode-face {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, #1e9bff1f, transparent 75%), var(--bg-float);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 26px var(--accent-glow);
+}
+.mode-opt input:checked + .mode-face b { color: var(--txt); }
+.mode-opt input:focus-visible + .mode-face { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* El hueco de la home sigue sirviendo con fondo animado, pero para otra cosa
+   (miniatura, icono y ficha). Se marca en vez de atenuarlo como los tapados. */
+.slot.is-repurposed .slot-shot { opacity: 1; }
+.slot.is-repurposed .slot-raf-warn { display: none; }
+.slot.is-repurposed { box-shadow: 0 0 0 1px var(--accent-glow); }
+
+/* ---------- vista previa: maqueta de la home de la PS4 ---------- */
+/* Todo se dimensiona en cqw (ancho del escenario) para que la maqueta escale
+   entera con la ventana y las proporciones se mantengan: si se usaran px, en
+   una pantalla chica los iconos taparian el fondo y la vista mentiria. */
+.pv-stage {
+  position: relative;
+  container-type: size;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 50px #00000066;
+  /* los pisa el JS con los colores del theme.xml */
+  --pv-font: #ffffff;
+  --pv-shadow: #000000;
+  --pv-focus: #1e9bff;
+  --pv-theme: #1e9bff;
+}
+.pv-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* La consola tinta la parte de arriba con el color del sistema. */
+.pv-tint {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--pv-theme) 30%, transparent) 0%,
+                    transparent 26%),
+    linear-gradient(0deg, #00000073 0%, transparent 34%);
+}
+.pv-empty {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--txt-faint); font-size: 15px;
+}
+.pv-screen { position: absolute; inset: 0; }
+
+/* Barra de arriba: los iconos quedan al 9.4% de la altura (5.3cqw) y el
+   reloj al 92.1% del ancho. Medido sobre captura. */
+.pv-top {
+  position: absolute; top: 3.5cqw; left: 5.1cqw; right: 4.6cqw;
+  display: flex; align-items: center; justify-content: space-between; gap: 2cqw;
+}
+/* Paso entre centros 8.95% del ancho, glifo 3.7%: el hueco es la diferencia. */
+.pv-fnrow { display: flex; gap: 5.25cqw; align-items: center; }
+.pv-status {
+  display: flex; align-items: center; gap: 1.4cqw;
+  color: var(--pv-font); font-size: 1.6cqw;
+  text-shadow: 0 0.12cqw 0.25cqw var(--pv-shadow);
+  white-space: nowrap;
+}
+.pv-clock { opacity: .85; }
+
+/* --- iconos de funcion, chicos (home) --- */
+.pv-fn {
+  width: 3.7cqw; height: 3.7cqw;
+  display: grid; place-items: center;
+  opacity: .92;
+}
+.pv-fn img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* Los que no subes salen como marca de agua: se distingue tuyo de sistema. */
+.pv-fn.is-default {
+  border: 0.18cqw solid color-mix(in srgb, var(--pv-font) 55%, transparent);
+  border-radius: 50%;
+  opacity: .5;
+}
+
+/* --- fila de contenido (home) --- */
+/* Fila de contenido. Va en la MITAD DE ARRIBA de la pantalla, no abajo:
+   los mosaicos normales empiezan al 21.4% de la altura y el centro de la fila
+   cae sobre el 32.5%. Antes esto estaba al 55% y era el error mas gordo de la
+   maqueta. Los mosaicos se alinean por su centro, por eso el elegido crece
+   hacia arriba y hacia abajo. */
+.pv-content { position: absolute; left: 5.1cqw; right: 2cqw; top: 0; }
+.pv-tiles {
+  position: absolute; top: 18.3cqw; left: 0; right: 0;
+  transform: translateY(-50%);
+  display: flex; align-items: center; gap: 1.3cqw;
+}
+.pv-tile {
+  width: 11.6cqw; height: 11.6cqw; flex: none;
+  border-radius: 0.3cqw;
+  background: #ffffff14;
+  border: 0.1cqw solid #ffffff26;
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.pv-tile img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* El elegido es 1.64x el normal, medido. */
+.pv-tile.is-sel {
+  width: 19cqw; height: 19cqw;
+  border-color: var(--pv-focus);
+  box-shadow: 0 0 0 0.25cqw var(--pv-focus),
+              0 0 2.5cqw color-mix(in srgb, var(--pv-focus) 50%, transparent);
+}
+/* El nombre del elegido sale a su derecha, no debajo de la fila. */
+.pv-tilename {
+  position: absolute; left: 32.4cqw; top: 27.4cqw;
+  color: var(--pv-font); font-size: 3.1cqw; font-weight: 400;
+  text-shadow: 0 0.15cqw 0.4cqw var(--pv-shadow);
+  max-width: 55cqw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pv-tiledesc {
+  position: absolute; left: 22.7cqw; top: 40.3cqw;
+  display: flex; align-items: flex-start; gap: 1.2cqw;
+  color: var(--pv-font); font-size: 1.7cqw; line-height: 1.5;
+  text-shadow: 0 0.12cqw 0.3cqw var(--pv-shadow);
+  max-width: 60cqw;
+}
+.pv-tiledesc i {
+  width: 2.2cqw; height: 2.2cqw; flex: none; margin-top: 0.2cqw;
+  border: 0.14cqw solid currentColor; border-radius: 50%; opacity: .8;
+}
+
+/* --- menu superior: los mismos iconos, en grande y con nombre --- */
+/* Mismo paso que la fila real: 8.95cqw entre centros, glifo 3.7cqw y el que
+   tiene el foco 1.5x. En la consola solo se ve el nombre del que esta elegido;
+   aqui se dejan todos en tenue porque esto es una herramienta y saber cual es
+   cual importa mas que copiar la pantalla al milimetro. */
+.pv-funcrow {
+  position: absolute; left: 0; right: 0; top: 16cqw;
+  display: flex; justify-content: center; gap: 0.55cqw;
+  padding: 0 3.2cqw;
+}
+.pv-fnbig { width: 8.4cqw; text-align: center; }
+.pv-fnbig .pv-glyph {
+  width: 3.7cqw; height: 3.7cqw; margin: 0 auto;
+  display: grid; place-items: center;
+  transition: width .12s, height .12s;
+}
+.pv-fnbig.is-sel .pv-glyph { width: 5.6cqw; height: 5.6cqw; }
+.pv-fnbig img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pv-fnbig.is-default .pv-glyph {
+  border: 0.22cqw solid color-mix(in srgb, var(--pv-font) 50%, transparent);
+  border-radius: 50%;
+  opacity: .5;
+}
+.pv-fnbig.is-sel .pv-glyph {
+  box-shadow: 0 0 0 0.28cqw var(--pv-focus),
+              0 0 2.6cqw color-mix(in srgb, var(--pv-focus) 55%, transparent);
+  border-radius: 50%;
+}
+.pv-fnbig.is-sel span { opacity: 1; font-weight: 600; }
+.pv-fnbig span {
+  display: block; margin-top: 1.3cqw;
+  color: var(--pv-font); font-size: 1.25cqw; line-height: 1.35; opacity: .72;
+  text-shadow: 0 0.12cqw 0.3cqw var(--pv-shadow);
+}
+
+/* Muestra del color del sistema, junto al desplegable: elegir "3 — navy" sin
+   ver el color era adivinar. */
+.swatch {
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 1px solid #ffffff2e;
+  box-shadow: 0 0 0 1px #00000059;
+  display: inline-block; vertical-align: middle;
+}
+
+/* ---------- vista "aplicar tema" ---------- */
+/* Esta si esta medida: las posiciones salen de capturas reales de 1920x1080
+   de dos temas (ver ref/). Por eso los numeros son tan concretos. */
+.pv-apply { background: #0000; }
+.pv-ap-title {
+  position: absolute; left: 5.7cqw; top: 5.4cqw;
+  font-size: 3.05cqw; font-weight: 300; letter-spacing: 0.02em;
+  color: var(--pv-font);
+  text-shadow: 0 0.12cqw 0.3cqw var(--pv-shadow);
+  max-width: 80cqw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pv-ap-rule {
+  position: absolute; left: 0; right: 0; height: 0.06cqw;
+  background: color-mix(in srgb, var(--pv-font) 30%, transparent);
+}
+.pv-ap-rule-top { top: 6.9cqw; }
+.pv-ap-rule-bottom { top: 48.9cqw; }
+
+.pv-ap-panel {
+  position: absolute; top: 13.3cqw;
+  width: 38.5cqw; height: 21.8cqw;
+  border-radius: 0.2cqw;
+  box-shadow: 0 0.6cqw 1.6cqw #00000059;
+}
+.pv-ap-shot { left: 9.9cqw; object-fit: cover; background: #0006; }
+.pv-ap-settings {
+  left: 51.6cqw; overflow: hidden;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--pv-theme) 88%, #000) 0%,
+    color-mix(in srgb, var(--pv-theme) 62%, #000) 60%,
+    color-mix(in srgb, var(--pv-theme) 40%, #000) 100%);
+}
+.pv-ap-wave { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pv-ap-set-head {
+  position: relative;
+  padding: 1.1cqw 1.4cqw 0.7cqw;
+  font-size: 1.5cqw; color: #fff;
+  border-bottom: 0.05cqw solid #ffffff2e;
+}
+.pv-ap-set-rows { position: relative; padding: 0.8cqw 1.4cqw; }
+.pv-ap-row {
+  display: flex; align-items: center; gap: 0.8cqw;
+  padding: 0.42cqw 0;
+  border-bottom: 0.04cqw solid #ffffff1f;
+  font-size: 1.05cqw; color: #ffffffe0;
+}
+.pv-ap-row i {
+  width: 1.2cqw; height: 1.2cqw; flex: none;
+  border-radius: 0.22cqw; background: #ffffff5c;
+}
+.pv-ap-btn {
+  position: absolute; left: 38.4cqw; top: 42.7cqw;
+  width: 23.1cqw; height: 3.65cqw;
+  display: grid; place-items: center;
+  border: 0.12cqw solid color-mix(in srgb, var(--pv-font) 75%, transparent);
+  color: var(--pv-font); font-size: 1.9cqw;
+  background: #00000038;
+  text-shadow: 0 0.1cqw 0.25cqw var(--pv-shadow);
+}
+
+/* En "aplicar tema" el tema aun NO esta puesto: el fondo de detras es el de
+   Ajustes. Se atenua el del tema para que quede claro que ahi no manda. */
+.pv-stage.pv-en-ajustes .pv-bg { filter: brightness(.35) saturate(.5); }
+.pv-stage.pv-en-ajustes .pv-tint { opacity: .35; }
+
+/* Selector de idioma y firma del autor en la cabecera. */
+.topbar-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.lang-select {
+  width: auto; min-width: 108px;
+  padding: 6px 10px; font-size: 13.5px;
+}
+.byline {
+  display: inline-block; margin-left: 10px;
+  padding-left: 10px; border-left: 1px solid var(--line);
+  color: var(--txt-faint);
+}
+.byline a {
+  /* Un punto mas claro que el resto de la firma: sin esto no se distingue
+     de texto plano y nadie descubre que es un enlace. */
+  color: var(--txt); font-weight: 500; text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.byline a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.byline a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

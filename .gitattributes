@@ -1,0 +1,18 @@
+# El proyecto se desarrolla en Windows pero genera XML que la PS4 lee: los
+# archivos del tema se escriben con LF a mano (theme.write_index_xml). Aqui se
+# fija LF tambien en el repo para que no dependa de la config de cada clon.
+* text=auto eol=lf
+
+# Binarios: que git no los toque.
+*.exe   binary
+*.dll   binary
+*.pkg   binary
+*.dds   binary
+*.at9   binary
+*.vag   binary
+*.mdx   binary
+*.png   binary
+*.mp4   binary
+*.gif   binary
+*.mp3   binary
+*.wav   binary
