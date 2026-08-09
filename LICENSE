@@ -22,20 +22,20 @@ SOFTWARE.
 
 -------------------------------------------------------------------------------
 
-Esta licencia cubre UNICAMENTE el codigo de este repositorio (app/, tests/,
-run.ps1 y la documentacion).
+This licence covers ONLY the code in this repository (app/, tests/, run.ps1
+and the documentation).
 
-NO cubre las herramientas de empaquetado que la app invoca y que no se
-distribuyen aqui:
+It does NOT cover the packaging tools the app invokes, which are not
+distributed here:
 
   orbis-pub-cmd.exe, ext/sc.exe, ext/di.exe, ext/libatrac9.dll
-      "Publishing Tools ver. 3.87" de Sony Interactive Entertainment Inc.,
-      software propietario de su SDK, con parches binarios aplicados por la
-      escena. Sin codigo fuente publico.
+      "Publishing Tools ver. 3.87" by Sony Interactive Entertainment Inc.,
+      proprietary SDK software with binary patches applied by the scene.
+      No public source.
 
   at9tool.exe
-      "SCEI ATRAC9 TOOL" de Sony Interactive Entertainment Inc., tambien del
-      SDK oficial.
+      "SCEI ATRAC9 TOOL" by Sony Interactive Entertainment Inc., also from the
+      official SDK.
 
-Hay que conseguirlos por separado y dejarlos en tools/ (ver README). Son de
-sus respectivos titulares y no se otorga ningun derecho sobre ellos.
+You have to obtain them separately and place them in tools/ (see the README).
+They belong to their respective owners and no rights over them are granted.
