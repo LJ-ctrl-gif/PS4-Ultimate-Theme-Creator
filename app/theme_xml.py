@@ -14,20 +14,22 @@ from __future__ import annotations
 
 import re
 
+from .config import L
+
 #: Format version. 4.0 is the reference theme's; higher versions make the
 #: system demand more files.
 FORMAT_VERSION = "4.0"
 
 #: The 8 system colours, exactly as Sony documents them inside the xml.
 THEME_COLORS = [
-    (0, "azul (por defecto)"),
-    (1, "rosa"),
-    (2, "rojo"),
-    (3, "azul marino"),
-    (4, "gris oscuro"),
-    (5, "dorado"),
-    (6, "azul acero claro"),
-    (7, "morado"),
+    (0, L("blue (default)", "azul (por defecto)")),
+    (1, L("pink", "rosa")),
+    (2, L("red", "rojo")),
+    (3, L("navy", "azul marino")),
+    (4, L("dark grey", "gris oscuro")),
+    (5, L("gold", "dorado")),
+    (6, L("light steel blue", "azul acero claro")),
+    (7, L("purple", "morado")),
 ]
 
 ARGB_RE = re.compile(r"^#[0-9A-Fa-f]{8}$")

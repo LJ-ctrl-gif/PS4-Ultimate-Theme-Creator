@@ -772,6 +772,7 @@ function guardarSesion() {
         bgmGain: bgm.gain,
         sfx: sfx.chosen,
         bgMode: bgMode(),
+        contentIdTouched: pkg.contentIdTouched,
         anim: anim.jobId
           ? { jobId: anim.jobId, frames: anim.frameCount, wait: anim.wait, size: anim.size }
           : null,
@@ -802,8 +803,11 @@ async function restaurarSesion() {
   PKG_CAMPOS.forEach((id) => {
     if ($(id) && d.campos?.[id] != null) $(id).value = d.campos[id];
   });
-  // If a Content ID was saved, do not overwrite it from the title.
-  if (d.campos?.["pkg-content-id"]) pkg.contentIdTouched = true;
+  // Restore whether the Content ID was actually typed by hand. Inferring it
+  // from "the field has a value" was wrong: it always has one, because it is
+  // auto-generated on boot, so after the first reload it stayed frozen and
+  // stopped following the Title ID.
+  pkg.contentIdTouched = Boolean(d.contentIdTouched);
 
   let vivos = 0, perdidos = 0;
   for (const [slotId, jobId] of Object.entries(d.slots || {})) {
@@ -1026,6 +1030,19 @@ function renderPreview() {
 
 const pkg = { defaults: null, contentIdTouched: false };
 
+/** Fills the system colour dropdown, keeping the current selection.
+ *
+ *  Split out so it can be redrawn on a language change: the colour names come
+ *  from the backend as {en, es}. */
+function pintarColoresDelSistema() {
+  const sel = $("pkg-themecolor");
+  const actual = sel.value || String(pkg.defaults.theme_defaults.themecolor);
+  sel.innerHTML = pkg.defaults.theme_colors
+    .map((c) => `<option value="${c.value}">${c.value} — ${lbl(c.label)}</option>`)
+    .join("");
+  sel.value = actual;
+}
+
 /** <input type=color> gives #RRGGBB and theme.xml wants opaque #AARRGGBB. */
 const hexToArgb = (hex) => ("#FF" + hex.replace("#", "")).toUpperCase();
 const argbToHex = (argb) => "#" + argb.replace("#", "").slice(2).toLowerCase();
@@ -1188,9 +1205,7 @@ async function bootPackage() {
   $("pkg-fixed-fmt").textContent =
     `${modo.volume_type} · ${d.defaults.category} · IRO_TAG ${modo.iro_tag}`;
 
-  $("pkg-themecolor").innerHTML = d.theme_colors
-    .map((c) => `<option value="${c.value}"${c.value === d.theme_defaults.themecolor ? " selected" : ""}>${c.value} — ${c.label}</option>`)
-    .join("");
+  pintarColoresDelSistema();
   $("pkg-fontcolor").value = argbToHex(d.theme_defaults.fontcolor);
   $("pkg-fontshadow").value = argbToHex(d.theme_defaults.fontshadowcolor);
   $("pkg-focuscolor").value = argbToHex(d.theme_defaults.focuscolor);
@@ -1236,6 +1251,7 @@ function relocalizarTodo() {
   sel.value = resActual;
 
   pintarSlots();
+  pintarColoresDelSistema();
   describeBgmSupport();
   pintarSfxRows();
   syncSizeUi();

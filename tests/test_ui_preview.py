@@ -218,6 +218,32 @@ with sync_playwright() as pw:
           page.input_value("#pkg-title"))
     check("y con el, el boton de empaquetar", not page.is_disabled("#pkg-build"))
 
+    # El Content ID se autogenera desde el Title ID, PERO tras recargar dejaba
+    # de hacerlo: la sesion lo marcaba como "editado a mano" solo porque tenia
+    # valor, y siempre lo tiene. Se quedaba con el Title ID viejo y el build
+    # fallaba con "The Content ID must contain the Title ID".
+    page.fill("#pkg-title-id", "CUSA01234")
+    page.wait_for_timeout(900)
+    cid = page.input_value("#pkg-content-id")
+    check("tras recargar, el Content ID sigue al Title ID", "CUSA01234" in cid, cid)
+
+    # Y si lo escribes tu, mandas tu.
+    page.fill("#pkg-content-id", "UP9000-CUSA01234_00-MIOMIOMIOMIOMIOO")
+    page.wait_for_timeout(300)
+    page.fill("#pkg-title-id", "CUSA09999")
+    page.wait_for_timeout(900)
+    check("un Content ID escrito a mano se respeta",
+          page.input_value("#pkg-content-id").endswith("MIOMIOMIOMIOMIOO"),
+          page.input_value("#pkg-content-id"))
+
+    # Los nombres de color venian del backend en espanol y salian asi en la
+    # interfaz inglesa ("2 — rojo").
+    colores = page.eval_on_selector_all("#pkg-themecolor option",
+                                        "e => e.map(x => x.textContent)")
+    check("los colores del sistema van traducidos",
+          any("red" in c for c in colores) and not any("rojo" in c for c in colores),
+          str(colores[:3]))
+
     check("sin errores de consola", not errs, str(errs[:3]))
     b.close()
 
