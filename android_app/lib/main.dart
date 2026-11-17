@@ -217,7 +217,6 @@ class _BuilderHomeState extends State<BuilderHome> {
       final jsonBytes = utf8.encode(const JsonEncoder.withIndent('  ').convert(manifest));
       archive.addFile(ArchiveFile('project.json', jsonBytes.length, jsonBytes));
       final zipped = ZipEncoder().encode(archive);
-      if (zipped == null) throw StateError('ZIP export returned no data.');
       final root = await getApplicationDocumentsDirectory();
       final out = File('${root.path}/${_safeProjectName()}_project.zip');
       await out.writeAsBytes(zipped, flush: true);
