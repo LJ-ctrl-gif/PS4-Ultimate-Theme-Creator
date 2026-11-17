@@ -1,30 +1,26 @@
 # BLACK VOID — Generated Icon Asset Register
 
-This file records the current Adobe Firefly icon atlas and its separated icon exports.
+This file records the Adobe Firefly icon atlas and separated exports.
 
-## Source atlas
-- PNG: https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:b845ce00-39fb-407e-ac67-bc0a49e1cd66
-- Layout: 5 columns × 4 rows
-- Style: brushed silver / charcoal pictograms
-- Transparent-background atlas requested; verify transparency before final PS4 packaging.
+## Source atlases
+- Silver atlas: https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:b845ce00-39fb-407e-ac67-bc0a49e1cd66
+- Glow atlas: https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:1254ac0e-9047-414c-bc46-74c4cd8b8bc3
+- Layout: 5 columns × 4 rows; silver brushed-metal style; glow sheet adds cool-white / icy-blue edge lighting to the first nine function symbols.
 
-## Exported icon crops
-The crops were extracted by fixed grid coordinates from the atlas and resized to the builder's configured dimensions. These are working exports, not yet visually approved for final console use.
+## Function icons — 128 × 128
+| Slot | Silver PNG | Glow PNG — 152 × 152 |
+|---|---|---|
+| community.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:5b74f0cf-4ca9-419a-9ef0-e0abf0dd8ff5 | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:dd84c93e-200a-455d-9a24-6afc868305ad |
+| event.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:e1cfc5c1-6cd4-4e9b-be56-ce707395e09c | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:c87ec12b-a692-4fbc-b7d7-7cb87617e506 |
+| friend.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:e3c65e3f-5c65-4645-a93e-4796e378f47a | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:7c3b68e0-2a25-4ac5-85e5-ff88c7bc68ec |
+| message.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:428e91e5-47b8-4c6b-acc8-2bb8cdb4fd7a | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:6057806c-742a-462a-8401-37d8c7944d25 |
+| notification.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:d2b55962-fdc3-4d0c-b37e-3b4da34b8d9b | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:f6218d21-1cee-456b-ac99-6fff1a1af723 |
+| party.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:b1a008fb-0a13-4bd8-bbf5-68c9f0658a58 | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:c338c9ac-099a-4440-8819-22ff2c8b6636 |
+| power.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:c6cb59a6-e728-4c90-b093-61ca859dafce | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:89d50a29-377a-4aaa-9c34-0e29119c4e79 |
+| setting.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:fcf080f4-f296-4a11-be30-c305ed697b94 | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:53619730-e24b-4b88-b743-f1608ab81004 |
+| trophy.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:0599a9cc-e451-4e5d-bc95-ff2331b26b0d | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:ef2a3b2c-8031-4128-b302-b6d9691edead |
 
-### Function icons — 128 × 128
-| Slot | PNG |
-|---|---|
-| community.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:5b74f0cf-4ca9-419a-9ef0-e0abf0dd8ff5 |
-| event.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:e1cfc5c1-6cd4-4e9b-be56-ce707395e09c |
-| friend.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:e3c65e3f-5c65-4645-a93e-4796e378f47a |
-| message.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:428e91e5-47b8-4c6b-acc8-2bb8cdb4fd7a |
-| notification.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:d2b55962-fdc3-4d0c-b37e-3b4da34b8d9b |
-| party.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:b1a008fb-0a13-4bd8-bbf5-68c9f0658a58 |
-| power.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:c6cb59a6-e728-4c90-b093-61ca859dafce |
-| setting.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:fcf080f4-f296-4a11-be30-c305ed697b94 |
-| trophy.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:0599a9cc-e451-4e5d-bc95-ff2331b26b0d |
-
-### Content icons — 512 × 512
+## Content icons — 512 × 512
 | Slot | PNG |
 |---|---|
 | browser.png | https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:a75b8f77-7e84-4cf4-8ed6-fcdee719d5bf |
@@ -41,13 +37,11 @@ The crops were extracted by fixed grid coordinates from the atlas and resized to
 ## Builder destination paths
 - Function icons: `themes/BLACK_VOID/texture/function_icon/`
 - Content icons: `themes/BLACK_VOID/texture/content_icon/`
-- Function glow variants: `<slot>_glow.png` at 152 × 152. Not generated yet.
+- Glow variants: same function-icon folder, named `<slot>_glow.png`.
 
-## Remaining production work
-1. Verify each crop's symbol and transparency against the intended slot.
-2. Create matching 152 × 152 glow variants for all nine function icons.
-3. Place the verified PNG files in the builder folders.
-4. Build the PS4 theme package using the builder's supported packaging tools.
-5. Test installation and display on a PS4 before calling the theme finished.
-
-No PKG is included in this asset register.
+## Production status
+- 9 silver function exports and 9 glow exports processed at their configured dimensions.
+- 10 content exports processed at 512 × 512.
+- The atlas/crop outputs still require visual slot-by-slot verification and transparent-background verification before packaging.
+- Binary PNGs have not yet been committed into the repository; this register preserves the generated Adobe asset links.
+- No PS4 PKG has been built or tested yet.
