@@ -1,94 +1,59 @@
 # BLACK VOID — PS4 theme asset map
 
-Visual direction: **true jet black (#000000)** across the background, with restrained brushed-silver light trails and crisp silver icon silhouettes. Do not use charcoal or graphite as the background fill.
+Visual direction: **jet black (#000000)** with restrained brushed-silver iconography and silver edge lighting.
 
 ## Background artwork
 
-Both background images have been generated in Adobe Firefly, resized to 1920x1080 PNG, and previewed.
+| Target path | Artwork |
+|---|---|
+| `texture/background/homescreen.png` | [1920x1080 PNG](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:02f71d3a-777f-4641-91f1-d6ae11e2cc6a) |
+| `texture/background/functionscreen.png` | [1920x1080 PNG](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:b5779301-d818-42c8-959b-8be4e83d4736) |
 
-| Target path | Artwork | Source |
-|---|---|---|
-| `texture/background/homescreen.png` | Jet-black home background with subtle silver edge trails | [PNG artwork](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:02f71d3a-777f-4641-91f1-d6ae11e2cc6a) |
-| `texture/background/functionscreen.png` | Jet-black function background with silver edge trails and a clear center | [PNG artwork](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:b5779301-d818-42c8-959b-8be4e83d4736) |
-
-These are source artwork links, not repository files yet. The GitHub text-file connector cannot upload binary PNG bytes, so do not treat the images as installed theme assets until they are transferred through the builder's asset upload flow.
+These are artwork links, not binary files committed to this repository.
 
 ## Function icons
 
-Each item maps to a fixed builder slot. Export a 128x128 PNG plus a matching 152x152 glow PNG.
+Builder slots and exact filenames from `app/config.py`. Standard icons are 128x128 PNG; glow variants must be 152x152 PNG.
 
-| Builder slot | Required filename | Visual concept |
+| Slot | Filename | Standard PNG |
 |---|---|---|
-| `fn:community` | `community.png` | group of people / community |
-| `fn:event` | `event.png` | calendar or event marker |
-| `fn:friend` | `friend.png` | single user / friends |
-| `fn:message` | `message.png` | message bubble |
-| `fn:notification` | `notification.png` | notification bell |
-| `fn:party` | `party.png` | headset / party chat |
-| `fn:power` | `power.png` | power symbol |
-| `fn:setting` | `setting.png` | gear / settings |
-| `fn:trophy` | `trophy.png` | trophy |
+| fn:community | community.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:3e15042d-ebdf-40cc-8f9e-7c71297afcda) |
+| fn:event | event.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:2dfa9bc6-a9b6-435e-b428-b74bfec4854a) |
+| fn:friend | friend.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:c26ca465-d5b0-475a-bfe5-c2a2d96d3234) |
+| fn:message | message.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:81430e5f-d0ea-4266-be94-aa0b7fece25b) |
+| fn:notification | notification.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:96095470-526c-44b4-ae27-8c898ae33018) |
+| fn:party | party.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:b5f76dd4-7bb5-4b9a-b005-326503696fc0) |
+| fn:power | power.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:a8b1abd1-b935-420c-87ac-a6f89cbdc825) |
+| fn:setting | setting.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:956e08b1-5fbd-4ebd-a1bf-6dbc5c4e3b2a) |
+| fn:trophy | trophy.png | [128x128](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:1c50f2b4-7339-4d11-b850-222e3b9d63ea) |
 
-Glow filenames are the same names with `_glow` before `.png`, for example `power_glow.png`.
-
-### Resized working previews
-
-The following links are resized working crops, not final installed assets. Some use transparent/empty padding to preserve the full source icon; inspect them in the builder before final use.
-
-| Icon | Size | Working PNG |
-|---|---:|---|
-| Community | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:311c49e6-9f57-46c3-9158-1a982a319b02) |
-| Events | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:2ff50038-d9c5-4055-9506-56ceb3bab176) |
-| Friends | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:426d9837-5ef0-434d-98fa-2e28f21adafa) |
-| Messages | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:924fc291-14df-4888-9415-ed55e7835dde) |
-| Notifications | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:cdfc3676-e0ea-416d-b8cd-4cb516a06d04) |
-| Party | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:6518e9e8-82bc-4f72-a1b9-e6e6dec842aa) |
-| Power | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:2a4fc605-bc94-4ef8-816d-fdb24a9ba9bd) |
-| Settings | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:0fd81cd6-312c-4968-a9f4-97e39706e536) |
-| Trophies | 128x128 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:d73b4491-a343-4630-8739-e3e754c4af20) |
+Glow filenames use `_glow` before the extension (for example, `power_glow.png`). Glow files are **not yet generated**.
 
 ## Content icons
 
-Each item maps to a fixed builder slot and must be exported as a 512x512 PNG.
+All content icons are 512x512 PNG.
 
-| Builder slot | Required filename | Visual concept |
+| Slot | Filename | PNG |
 |---|---|---|
-| `ct:browser` | `browser.png` | web browser / globe |
-| `ct:disc` | `disc.png` | optical game disc |
-| `ct:discoverlay` | `discoverlay.png` | disc with overlay treatment |
-| `ct:folder` | `folder.png` | game folder |
-| `ct:gallery` | `gallery.png` | photo / capture gallery |
-| `ct:library` | `library.png` | game library / stacked cases |
-| `ct:livefromps` | `livefromps.png` | live broadcast / screen |
-| `ct:shareplay` | `shareplay.png` | shared play / two controllers |
-| `ct:tvvideo` | `tvvideo.png` | television / video |
-| `ct:usbmusic` | `usbmusic.png` | USB device / music note |
+| ct:browser | browser.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:dc1c5d5a-75d3-4707-9c5e-4a3edcd0810d) |
+| ct:disc | disc.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:5e8bd3f9-54e0-4156-8d3e-c25c18d23368) |
+| ct:discoverlay | discoverlay.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:5639f83f-f743-4d3e-a7da-7806b5c57748) |
+| ct:folder | folder.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:82c0b9e3-5e4a-4005-851b-af925c06d4b1) |
+| ct:gallery | gallery.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:c199133a-aa1e-4124-9ba3-413dfa30d4da) |
+| ct:library | library.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:0aec1794-48d6-4eff-8b3b-9110fcaa33a7) |
+| ct:livefromps | livefromps.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:6074ea6c-68a8-43e2-9bf8-7e986bc9c96f) |
+| ct:shareplay | shareplay.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:d7ffa59d-0863-4905-a44b-dabb59934629) |
+| ct:tvvideo | tvvideo.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:363cb601-b4b9-46e6-85c7-b53d484e4f5a) |
+| ct:usbmusic | usbmusic.png | [512x512](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:acbdb8a5-9c2e-4434-a17c-e2f7dc9b4875) |
 
-### Resized working previews
+## Status and remaining work
 
-These are 512x512 working crops, not yet visually approved or installed.
+- [x] Generate the two background artworks.
+- [x] Crop all 9 function icons and resize to 128x128.
+- [x] Crop all 10 content icons and resize to 512x512.
+- [ ] Visually inspect every icon in the builder; the resized images currently preserve the full tall crop using transparent side padding.
+- [ ] Create 9 matching 152x152 glow variants.
+- [ ] Transfer the binary PNGs into the builder and verify both screens.
+- [ ] Build and validate a PS4 theme package using the builder's supported packaging tools.
 
-| Icon | Size | Working PNG |
-|---|---:|---|
-| Browser | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:5baf9a0c-b211-4f3e-9cd1-5a216e42403c) |
-| Disc | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:d9ad8352-823a-4498-9753-9f33416737b1) |
-| Disc overlay | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:5f395e13-f5f1-41a1-acdc-a58e29fe7e84) |
-| Folder | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:8e4f3e8e-02ce-4263-b7a1-b95a3694403f) |
-| Gallery | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:489d3f26-6f73-4710-b711-f3cf097f52f5) |
-| Library | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:9e60b327-613e-4e9c-87f2-de378e355528) |
-| Live from PlayStation | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:bb47dbaf-c25c-46c9-9dcf-d81bcac0b148) |
-| Share Play | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:f4f20206-b3f8-4f04-80d9-8f69d4a0e796) |
-| TV / Video | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:f6eb9293-3fa7-48d7-abe9-ca6bb9b19e0d) |
-| USB Music | 512x512 | [Preview](https://photoshop-api.adobe.io/v2/short-url/urn:aaid:ps:US:dc7212f2-948d-4b16-931d-85daf5f59185) |
-
-## Integration checklist
-
-- [ ] Transfer the two background PNGs into the builder's Background tab.
-- [ ] Review all nine function icon crops and refine padding/cropping where needed.
-- [ ] Export nine function icons at 128x128 and their glow variants at 152x152.
-- [ ] Review and finalize ten content icons at 512x512.
-- [ ] Preserve transparency and use consistent silver styling against jet black.
-- [ ] Verify the Preview tab on home and function screens.
-- [ ] Build and validate the PKG with the builder's supported packaging tools.
-
-The backgrounds and icon crops are prepared artwork only; they are not yet committed as binary files or installed in a PS4 theme package. The fixed icon filenames above are taken from `app/config.py`; do not rename them.
+**Important:** the links above point to Adobe-hosted PNG outputs. They are not committed binary assets, not yet installed in a theme, and not proof of a working PS4 PKG.
