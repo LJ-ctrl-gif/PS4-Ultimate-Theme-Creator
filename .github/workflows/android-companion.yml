@@ -1,0 +1,36 @@
+name: PS4 Theme Builder Android APK
+on:
+  push:
+    branches: [main, feature/android-audio-controls]
+    paths:
+      - 'android_app/**'
+      - '.github/workflows/android-companion.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android platform files
+        run: flutter create --project-name ps4_theme_builder --org com.ljctrl.ps4theme --platforms=android .
+      - name: Resolve packages
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Build release APK
+        run: flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps4-theme-builder-android-apk
+          path: android_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
