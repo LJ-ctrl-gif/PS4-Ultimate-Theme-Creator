@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   prepare-artwork:
@@ -25,6 +25,17 @@ jobs:
         run: python -m pip install --disable-pip-version-check Pillow
       - name: Download and prepare BLACK VOID PNG assets
         run: python tools/prepare_black_void_assets.py
+      - name: Commit prepared PNG assets to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add BLACK_VOID_ASSETS/
+          if ! git diff --cached --quiet; then
+            git commit -m "Add generated BLACK VOID artwork assets"
+            git push
+          else
+            echo "Artwork assets are already up to date."
+          fi
       - name: Upload prepared artwork
         uses: actions/upload-artifact@v4
         with:
