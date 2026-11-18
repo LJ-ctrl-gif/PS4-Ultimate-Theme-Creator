@@ -7,6 +7,7 @@ on:
       - "tools/build_black_void_bundle.py"
       - "tools/validate_black_void_integration.py"
       - "app/**"
+      - "tests/**"
       - "README.md"
       - ".github/workflows/black-void-bundle.yml"
 permissions:
