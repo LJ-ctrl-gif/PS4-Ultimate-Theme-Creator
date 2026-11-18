@@ -1,0 +1,64 @@
+name: BLACK VOID Windows Packaging Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: windows-latest
+    steps:
+      - name: Check out theme creator
+        uses: actions/checkout@v4
+
+      - name: Check Windows packaging prerequisites
+        id: check
+        shell: pwsh
+        run: |
+          $required = @(
+            "tools/orbis-pub-cmd.exe",
+            "tools/ext/sc.exe",
+            "tools/ext/di.exe"
+          )
+          $missing = @()
+          foreach ($relative in $required) {
+            $path = Join-Path $env:GITHUB_WORKSPACE $relative
+            if (Test-Path -LiteralPath $path -PathType Leaf) {
+              Write-Host "FOUND: $relative"
+            } else {
+              Write-Host "MISSING: $relative"
+              $missing += $relative
+            }
+          }
+
+          $report = @()
+          $report += "# BLACK VOID Windows packaging preflight"
+          $report += ""
+          $report += "- Runner: Windows Server (GitHub-hosted)"
+          $report += "- Date (UTC): $([DateTime]::UtcNow.ToString('yyyy-MM-dd HH:mm:ss'))"
+          $report += ""
+          if ($missing.Count -eq 0) {
+            $report += "All three required executable files are present."
+            $report += ""
+            $report += "This is only a prerequisite check; it does not build or validate a PS4 PKG."
+            "ready=true" >> $env:GITHUB_OUTPUT
+          } else {
+            $report += "## Missing required files"
+            foreach ($item in $missing) { $report += "- `$item`" }
+            $report += ""
+            $report += "No PKG build was attempted. Provide these files only from an authorized source, using a private and appropriate storage method."
+            "ready=false" >> $env:GITHUB_OUTPUT
+          }
+          $report | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+          $report | Out-File -FilePath preflight-report.md -Encoding utf8
+
+      - name: Upload preflight report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BLACK-VOID-windows-preflight
+          path: preflight-report.md
+          if-no-files-found: warn
+          retention-days: 7
