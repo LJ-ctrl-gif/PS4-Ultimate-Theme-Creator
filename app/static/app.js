@@ -1220,6 +1220,11 @@ async function bootPackage() {
   }
   pkg.defaults = d;
   $("pkg-missing").hidden = d.available;
+  const missingTools = d.missing_requirements || [];
+  $("pkg-tools-detail").hidden = d.available || missingTools.length === 0;
+  $("pkg-tools-detail").textContent = missingTools.length
+    ? `Required to build a PS4 theme PKG: ${missingTools.join(", ")}`
+    : "";
 
   $("pkg-title").value = d.defaults.title;
   $("pkg-title-id").value = d.defaults.title_id;
