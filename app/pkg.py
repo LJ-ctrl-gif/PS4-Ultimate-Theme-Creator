@@ -29,6 +29,7 @@ import datetime as _dt
 import re
 import shutil
 import subprocess
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -50,8 +51,19 @@ class PackageError(RuntimeError):
     """Packaging failure, carrying the useful part of the tool's output."""
 
 
+def missing_tool_requirements() -> list[str]:
+    """Return packaging prerequisites that are absent on this machine."""
+    missing = []
+    if sys.platform != "win32":
+        missing.append("Windows host (the Sony packaging tools are Windows executables)")
+    for relative in ("orbis-pub-cmd.exe", "ext/sc.exe", "ext/di.exe", "ext/libatrac9.dll"):
+        if not (PKG_TOOLS_DIR / relative).is_file():
+            missing.append(relative)
+    return missing
+
+
 def tools_available() -> bool:
-    return ORBIS_CMD.is_file()
+    return not missing_tool_requirements()
 
 
 def calc_loudness(path) -> float | None:
@@ -353,9 +365,11 @@ def build_package(work_dir: Path, content_dir: Path, meta: PackageMeta) -> tuple
     generated here inside its sce_sys.
     """
     if not tools_available():
+        missing = ", ".join(missing_tool_requirements())
         raise PackageError(
-            f"No se encontro orbis-pub-cmd.exe en {PKG_TOOLS_DIR}. "
-            "Revisa que la carpeta de las Fake PKG Tools siga en el proyecto."
+            "PS4 theme packaging prerequisites are missing: "
+            f"{missing or str(PKG_TOOLS_DIR)}. "
+            "Install the supported tools in the documented tools/ layout on Windows."
         )
     meta.validate()
 
