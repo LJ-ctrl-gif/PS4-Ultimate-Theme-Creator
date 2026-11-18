@@ -25,7 +25,6 @@ class PackageToolchainTests(unittest.TestCase):
                 "orbis-pub-cmd.exe",
                 "ext/sc.exe",
                 "ext/di.exe",
-                "ext/libatrac9.dll",
             ):
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -35,6 +34,7 @@ class PackageToolchainTests(unittest.TestCase):
             ):
                 self.assertEqual(pkg.missing_tool_requirements(), [])
                 self.assertTrue(pkg.tools_available())
+                self.assertFalse(pkg.LOUDNESS_DLL.is_file())  # optional for theme packaging
 
                 (root / "ext/di.exe").unlink()
                 self.assertEqual(pkg.missing_tool_requirements(), ["ext/di.exe"])
