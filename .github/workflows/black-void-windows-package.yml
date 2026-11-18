@@ -2,6 +2,9 @@ name: BLACK VOID Windows Packaging Preflight
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/black-void-windows-package.yml"
 
 permissions:
   contents: read
