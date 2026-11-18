@@ -26,8 +26,8 @@ with ZipFile(BUNDLE) as archive:
         assert archive.getinfo(member).file_size > 0, f"Empty app slot asset: {member}"
 
 routes = {
-    (route.path, frozenset(route.methods or ()))
-    for route in app.routes
+    (route.path, frozenset(getattr(route, "methods", None) or ()))
+    for route in app.routes if hasattr(route, "path")
 }
 assert any(
     path == "/api/preset/black-void/import" and "POST" in methods
