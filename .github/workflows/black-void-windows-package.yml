@@ -49,7 +49,7 @@ jobs:
             "ready=true" >> $env:GITHUB_OUTPUT
           } else {
             $report += "## Missing required files"
-            foreach ($item in $missing) { $report += "- `$item`" }
+            foreach ($item in $missing) { $report += "- $item" }
             $report += ""
             $report += "No PKG build was attempted. Provide these files only from an authorized source, using a private and appropriate storage method."
             "ready=false" >> $env:GITHUB_OUTPUT
