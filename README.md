@@ -103,6 +103,27 @@ you don't upload keep the system ones.
 
 ![Icons tab](docs/02-icons.png)
 
+## BLACK VOID preset import
+
+The generated `BLACK-VOID-theme-assets.zip` can be imported into a running
+local builder without uploading the 23 images individually. Send the ZIP to
+`POST /api/preset/black-void/import` as multipart field `file`. The endpoint
+validates the archive and image set, creates the normal image-slot jobs, and
+returns the slot-to-job-ID map needed by `POST /api/package/build`.
+
+Example:
+
+```bash
+curl -F "file=@BLACK-VOID-theme-assets.zip" \
+  http://127.0.0.1:8000/api/preset/black-void/import
+```
+
+The import prepares artwork only. The Package tab still requires the
+project's supported packaging environment before an installable PS4 `.pkg`
+can be produced.
+
+---
+
 ## How it works
 
 **Still and animated backgrounds are mutually exclusive.** With a
