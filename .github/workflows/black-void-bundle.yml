@@ -24,6 +24,8 @@ jobs:
         run: python -m compileall -q app tools
       - name: Check browser JavaScript syntax
         run: node --check app/static/app.js
+      - name: Validate BLACK VOID app integration
+        run: python tools/validate_black_void_integration.py
       - name: Build canonical theme asset bundle
         run: python tools/build_black_void_bundle.py
       - name: Validate bundle contents
