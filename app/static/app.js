@@ -712,6 +712,27 @@ function pintarSlots() {
   syncRafOverlap();
 }
 
+async function importBlackVoidPreset(file) {
+  const input = $("black-void-file");
+  const fd = new FormData();
+  fd.append("file", file);
+  input.disabled = true;
+  try {
+    const data = await api("/api/preset/black-void/import", { method: "POST", body: fd });
+    for (const [slotId, item] of Object.entries(data.slots)) {
+      slots.chosen[slotId] = item.job_id;
+      paintSlot(slotId, item.preview);
+    }
+    guardarSesion();
+    toast(`BLACK VOID preset imported: ${data.imported} image slots`, "ok");
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    input.disabled = false;
+    input.value = "";
+  }
+}
+
 async function bootSlots() {
   const d = await api("/api/slots");
   slots.catalog = d.slots;
@@ -727,6 +748,10 @@ async function bootSlots() {
   };
   bulk("bulk-fn", "function_icon");
   bulk("bulk-ct", "content_icon");
+  const presetInput = $("black-void-file");
+  presetInput.addEventListener("change", () => {
+    if (presetInput.files?.[0]) importBlackVoidPreset(presetInput.files[0]);
+  });
   const bgmInput = $("bgm-file");
   bgmInput.addEventListener("change", () => {
     if (bgmInput.files?.[0]) uploadBgm(bgmInput.files[0]);
