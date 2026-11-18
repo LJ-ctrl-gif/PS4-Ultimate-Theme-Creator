@@ -38,6 +38,7 @@ from .config import PKG_CATEGORIES, PKG_DEFAULTS, PKG_MODES, PKG_TOOLS_DIR
 from .media import NO_WINDOW
 
 ORBIS_CMD = PKG_TOOLS_DIR / "orbis-pub-cmd.exe"
+LOUDNESS_DLL = PKG_TOOLS_DIR / "ext" / "libatrac9.dll"
 
 #: img_create can take a while with many frames, though in practice it is seconds.
 BUILD_TIMEOUT = 30 * 60
@@ -56,7 +57,7 @@ def missing_tool_requirements() -> list[str]:
     missing = []
     if sys.platform != "win32":
         missing.append("Windows host (the Sony packaging tools are Windows executables)")
-    for relative in ("orbis-pub-cmd.exe", "ext/sc.exe", "ext/di.exe", "ext/libatrac9.dll"):
+    for relative in ("orbis-pub-cmd.exe", "ext/sc.exe", "ext/di.exe"):
         if not (PKG_TOOLS_DIR / relative).is_file():
             missing.append(relative)
     return missing
@@ -73,7 +74,7 @@ def calc_loudness(path) -> float | None:
     in its PUBTOOLINFO as `bgmhome_loud`.
     For .at9 files ext/libatrac9.dll must sit next to the exe.
     """
-    if not tools_available():
+    if not tools_available() or not LOUDNESS_DLL.is_file():
         return None
     try:
         proc = subprocess.run(
