@@ -5,6 +5,7 @@ on:
     paths:
       - "BLACK_VOID_ASSETS/**"
       - "tools/build_black_void_bundle.py"
+      - "tools/validate_black_void_integration.py"
       - "app/**"
       - "README.md"
       - ".github/workflows/black-void-bundle.yml"
