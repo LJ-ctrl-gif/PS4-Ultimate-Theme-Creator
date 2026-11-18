@@ -8,6 +8,7 @@ else keeps working.
 from __future__ import annotations
 
 import json
+import struct
 import time
 import zipfile
 from io import BytesIO
@@ -386,7 +387,14 @@ async def black_void_preset_import(file: UploadFile = File(...)) -> dict:
                 info = archive.getinfo(member)
                 if info.file_size > 32 * 1024 * 1024:
                     raise HTTPException(413, f"Preset image is too large: {member}.")
-                mapped[slot_id] = archive.read(member)
+                blob = archive.read(member)
+                # Reject non-PNG or unreasonable dimensions before creating any jobs.
+                if len(blob) < 24 or blob[:8] != b"\\x89PNG\\r\\n\\x1a\\n" or blob[12:16] != b"IHDR":
+                    raise HTTPException(415, f"Preset image is not a valid PNG: {member}.")
+                width, height = struct.unpack(">II", blob[16:24])
+                if not width or not height or width > 8192 or height > 8192:
+                    raise HTTPException(422, f"Preset image dimensions are invalid: {member}.")
+                mapped[slot_id] = blob
     except zipfile.BadZipFile as exc:
         raise HTTPException(415, "The uploaded file is not a valid ZIP archive.") from exc
 
