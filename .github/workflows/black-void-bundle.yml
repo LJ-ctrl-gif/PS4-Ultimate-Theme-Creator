@@ -18,8 +18,22 @@ jobs:
           python-version: "3.12"
       - name: Install Pillow
         run: python -m pip install Pillow
+      - name: Check Python syntax
+        run: python -m compileall -q app tools
       - name: Build canonical theme asset bundle
         run: python tools/build_black_void_bundle.py
+      - name: Validate bundle contents
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          path = Path("dist/BLACK-VOID-theme-assets.zip")
+          with ZipFile(path) as archive:
+              pngs = [name for name in archive.namelist() if name.lower().endswith(".png")]
+              assert len(pngs) == 32, f"Expected 32 PNG files, found {len(pngs)}"
+              assert "Image0/theme.xml" not in archive.namelist(), "Preset bundle must not pretend to be a complete theme"
+          print(f"Validated {len(pngs)} PNG files in {path.stat().st_size} bytes")
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: BLACK-VOID-theme-assets
