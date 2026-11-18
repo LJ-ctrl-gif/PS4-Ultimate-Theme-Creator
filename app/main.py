@@ -390,7 +390,7 @@ async def black_void_preset_import(file: UploadFile = File(...)) -> dict:
                     raise HTTPException(413, f"Preset image is too large: {member}.")
                 blob = archive.read(member)
                 # Reject non-PNG or unreasonable dimensions before creating any jobs.
-                if len(blob) < 24 or blob[:8] != b"\\x89PNG\\r\\n\\x1a\\n" or blob[12:16] != b"IHDR":
+                if len(blob) < 24 or blob[:8] != b"\x89PNG\r\n\x1a\n" or blob[12:16] != b"IHDR":
                     raise HTTPException(415, f"Preset image is not a valid PNG: {member}.")
                 width, height = struct.unpack(">II", blob[16:24])
                 if not width or not height or width > 8192 or height > 8192:
