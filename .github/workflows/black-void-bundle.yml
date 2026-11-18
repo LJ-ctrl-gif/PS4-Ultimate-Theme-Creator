@@ -1,0 +1,27 @@
+name: BLACK VOID Theme Asset Bundle
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "BLACK_VOID_ASSETS/**"
+      - "tools/build_black_void_bundle.py"
+      - ".github/workflows/black-void-bundle.yml"
+permissions:
+  contents: read
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Pillow
+        run: python -m pip install Pillow
+      - name: Build canonical theme asset bundle
+        run: python tools/build_black_void_bundle.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BLACK-VOID-theme-assets
+          path: dist/BLACK-VOID-theme-assets.zip
+          retention-days: 14
