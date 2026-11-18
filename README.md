@@ -31,58 +31,42 @@ ImageMagick is not needed — the DXT1a compressor is part of the project. If
 
 ### The packaging tools are not bundled
 
-`orbis-pub-cmd.exe` and friends are **proprietary Sony binaries** patched by
-the scene, so they are not redistributed here. You need **5 files**, and they
-come from **two different downloads**.
+The package builder depends on proprietary Sony publishing executables. They
+are intentionally not included in this repository and must not be redistributed
+without authorization.
 
-#### 1. From "PS4 Fake PKG Tools 3.87 (Patched) V7" — 4 files
+The three files required by the current package preflight are:
 
-Good news: the layout inside that download is **already the one this project
-wants**. Copy these four across, keeping the `ext/` subfolder, and you're done.
+| Required file | Destination |
+|---|---|
+| `orbis-pub-cmd.exe` | `tools/` |
+| `ext/sc.exe` | `tools/ext/` |
+| `ext/di.exe` | `tools/ext/` |
 
-| Copy this file | To | Size | Without it |
-|---|---|---|---|
-| `orbis-pub-cmd.exe` | `tools/` | 3.12 MB | no packaging at all |
-| `ext/sc.exe` | `tools/ext/` | 1.03 MB | `orbis-pub-cmd` won't even start |
-| `ext/di.exe` | `tools/ext/` | 0.68 MB | same |
-| `ext/libatrac9.dll` | `tools/ext/` | 0.11 MB | music loudness can't be measured |
+Optional audio helpers:
 
-The sizes are a rough check that you grabbed the right build. Nothing else
-from that download is used — not the GUIs, not the validator, not the trophy
-utilities, not the `PSX-PS2-FPKG` folder.
+| Optional file | Destination | Purpose |
+|---|---|---|
+| `ext/libatrac9.dll` | `tools/ext/` | ATRAC9 loudness measurement |
+| `at9tool.exe` | `tools/` | Convert uploaded music to `.at9` |
 
-> That download also ships a second copy of `ext/` inside `PSX-PS2-FPKG/`.
-> Either copy works; they are byte-identical.
+Obtain proprietary tools only through an authorized source and comply with
+their applicable license terms. Do not commit these executables to a public
+repository. The project can still generate and export the BLACK VOID artwork
+bundle without them, but it cannot produce an installable PS4 `.pkg`.
 
-#### 2. `at9tool.exe` — optional, 1 file
+### Remote Windows preflight
 
-| Copy this file | To | Size | Without it |
-|---|---|---|---|
-| `at9tool.exe` | `tools/` | 0.21 MB | music must be uploaded already in `.at9`, and the volume control is disabled |
+The repository includes **BLACK VOID Windows Packaging Preflight** under
+GitHub Actions. On a phone, open the
+[Actions page](https://github.com/LJ-ctrl-gif/PS4-Ultimate-Theme-Creator/actions),
+select that workflow, and tap **Run workflow**. It checks whether the three
+required executables are present in the checked-out `tools/` folder and
+uploads a short report. This is only a prerequisite check; it does not build
+a package or supply proprietary tools.
 
-It is the "SCEI ATRAC9 TOOL" from Sony's SDK. It is *not* part of the Fake PKG
-Tools download.
-
-#### The end result
-
-```
-tools/
-├─ orbis-pub-cmd.exe      ← required
-├─ at9tool.exe            ← optional
-├─ NOTICE.txt             (already in the repo)
-└─ ext/
-   ├─ sc.exe              ← required
-   ├─ di.exe              ← required
-   └─ libatrac9.dll       ← required
-```
-
-**The app runs without any of this.** On startup it checks what is present,
-disables the *Package* tab if the tools are missing and carries on — you can
-still build every asset and export the animated scene `.zip`. The status pills
-in the top-right corner tell you what was detected.
-
-See [tools/NOTICE.txt](tools/NOTICE.txt) for where these binaries come from.
-
+The app itself can still be used for artwork preparation and ZIP export when
+the packaging tools are absent.
 ---
 
 ## What it makes
