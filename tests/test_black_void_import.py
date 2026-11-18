@@ -10,6 +10,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from PIL import Image
+
 from starlette.datastructures import UploadFile
 
 from app import jobs, main, media
@@ -18,13 +20,16 @@ from app.config import IMAGE_SLOTS
 
 def make_archive() -> bytes:
     out = io.BytesIO()
+    png = io.BytesIO()
+    Image.new("RGBA", (2, 2), (0, 0, 0, 255)).save(png, format="PNG")
+    image_blob = png.getvalue()
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as archive:
         for slot_id, spec in IMAGE_SLOTS.items():
             member = (
                 "Sc0/sce_sys/icon0.png" if slot_id == "icon0"
                 else f"Image0/{spec['path']}"
             )
-            archive.writestr(member, b"fake-png-data")
+            archive.writestr(member, image_blob)
     return out.getvalue()
 
 
