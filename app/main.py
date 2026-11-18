@@ -154,6 +154,7 @@ def system_info() -> dict:
         "ffprobe": bool(media.FFPROBE),
         "magick": bool(media.MAGICK),
         "pkg_tools": pkg.tools_available(),
+        "pkg_tools_missing": pkg.missing_tool_requirements(),
         "at9tool": at9.available(),
         "min_gain_db": MIN_GAIN_DB,
         "max_gain_db": MAX_GAIN_DB,
@@ -956,6 +957,7 @@ def package_defaults() -> dict:
     return {
         "available": pkg.tools_available(),
         "tools_dir": str(pkg.PKG_TOOLS_DIR),
+        "missing_requirements": pkg.missing_tool_requirements(),
         "defaults": {
             "title": "Mi Tema",
             "title_id": PKG_DEFAULTS["title_id"],
