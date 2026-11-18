@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 import time
+import zipfile
+from io import BytesIO
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -360,6 +362,56 @@ def slot_catalog() -> dict:
             }
             for slot_id, spec in IMAGE_SLOTS.items()
         ],
+    }
+
+
+@app.post("/api/preset/black-void/import")
+async def black_void_preset_import(file: UploadFile = File(...)) -> dict:
+    """Imports the generated BLACK VOID asset ZIP into normal image-slot jobs."""
+    data = await _read_upload(file, {".zip"})
+    try:
+        with zipfile.ZipFile(BytesIO(data)) as archive:
+            infos = archive.infolist()
+            if len(infos) > 64 or sum(info.file_size for info in infos) > 128 * 1024 * 1024:
+                raise HTTPException(413, "The preset archive is larger than the allowed expanded size.")
+            names = {info.filename for info in infos if not info.is_dir()}
+            mapped: dict[str, bytes] = {}
+            for slot_id, spec in IMAGE_SLOTS.items():
+                member = (
+                    "Sc0/sce_sys/icon0.png" if slot_id == "icon0"
+                    else f"Image0/{spec['path']}"
+                )
+                if member not in names:
+                    raise HTTPException(422, f"BLACK VOID preset is missing {member}.")
+                info = archive.getinfo(member)
+                if info.file_size > 32 * 1024 * 1024:
+                    raise HTTPException(413, f"Preset image is too large: {member}.")
+                mapped[slot_id] = archive.read(member)
+    except zipfile.BadZipFile as exc:
+        raise HTTPException(415, "The uploaded file is not a valid ZIP archive.") from exc
+
+    imported = {}
+    for slot_id, blob in mapped.items():
+        spec = IMAGE_SLOTS[slot_id]
+        job = jobs.create("slot", f"black-void-{slot_id}.png", blob)
+        job.meta["slot"] = slot_id
+        job.save()
+        info = media.probe(job.source)
+        preview = media.render_image(job.source, job.preview_dir / "preview.webp", spec["size"])
+        imported[slot_id] = {
+            "job_id": job.id,
+            "preview": f"/api/slot/{job.id}/preview?v={int(time.time() * 1000)}",
+            "bytes": preview.stat().st_size,
+            "target": list(spec["size"]),
+            "path": spec["path"],
+            "source": {"name": job.original_name, "width": info.width, "height": info.height},
+        }
+
+    return {
+        "preset": "BLACK VOID",
+        "imported": len(imported),
+        "slots": imported,
+        "message": "Preset images are ready. Use the returned job IDs in /api/package/build.",
     }
 
 
