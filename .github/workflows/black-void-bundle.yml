@@ -32,6 +32,8 @@ jobs:
         run: python tools/validate_black_void_integration.py
       - name: Test BLACK VOID import and rollback
         run: python -m unittest discover -s tests -p test_black_void_import.py
+      - name: Test PS4 package toolchain preflight
+        run: python -m unittest discover -s tests -p test_pkg_toolchain.py
       - name: Validate bundle contents
         run: |
           python - <<'PY'
