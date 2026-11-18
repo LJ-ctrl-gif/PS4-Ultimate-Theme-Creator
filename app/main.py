@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import struct
 import time
+import shutil
 import zipfile
 from io import BytesIO
 from pathlib import Path
@@ -398,22 +399,41 @@ async def black_void_preset_import(file: UploadFile = File(...)) -> dict:
     except zipfile.BadZipFile as exc:
         raise HTTPException(415, "The uploaded file is not a valid ZIP archive.") from exc
 
+    # Treat the preset as one transaction: if even one image is corrupt or
+    # cannot be rendered, remove every job created by this import.
     imported = {}
-    for slot_id, blob in mapped.items():
-        spec = IMAGE_SLOTS[slot_id]
-        job = jobs.create("slot", f"black-void-{slot_id}.png", blob)
-        job.meta["slot"] = slot_id
-        job.save()
-        info = media.probe(job.source)
-        preview = media.render_image(job.source, job.preview_dir / "preview.webp", spec["size"])
-        imported[slot_id] = {
-            "job_id": job.id,
-            "preview": f"/api/slot/{job.id}/preview?v={int(time.time() * 1000)}",
-            "bytes": preview.stat().st_size,
-            "target": list(spec["size"]),
-            "path": spec["path"],
-            "source": {"name": job.original_name, "width": info.width, "height": info.height},
-        }
+    created_jobs = []
+    try:
+        for slot_id, blob in mapped.items():
+            spec = IMAGE_SLOTS[slot_id]
+            job = jobs.create("slot", f"black-void-{slot_id}.png", blob)
+            created_jobs.append(job)
+            job.meta["slot"] = slot_id
+            job.save()
+            info = media.probe(job.source)
+            preview = media.render_image(
+                job.source, job.preview_dir / "preview.webp", spec["size"]
+            )
+            imported[slot_id] = {
+                "job_id": job.id,
+                "preview": f"/api/slot/{job.id}/preview?v={int(time.time() * 1000)}",
+                "bytes": preview.stat().st_size,
+                "target": list(spec["size"]),
+                "path": spec["path"],
+                "source": {
+                    "name": job.original_name,
+                    "width": info.width,
+                    "height": info.height,
+                },
+            }
+    except Exception as exc:
+        for job in created_jobs:
+            shutil.rmtree(job.root, ignore_errors=True)
+        if isinstance(exc, (MediaError, OSError, ValueError)):
+            raise HTTPException(
+                422, "A BLACK VOID image is invalid or could not be processed; no slots were imported."
+            ) from exc
+        raise
 
     return {
         "preset": "BLACK VOID",
