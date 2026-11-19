@@ -7,6 +7,16 @@ if ! command -v python >/dev/null 2>&1; then
   echo "Python is missing. Install it with: pkg install python"
   exit 1
 fi
+if ! python -c "import numpy" >/dev/null 2>&1; then
+  if command -v pkg >/dev/null 2>&1; then
+    echo "Installing Termux's prebuilt NumPy package..."
+    pkg install -y python-numpy
+  else
+    echo "NumPy is missing. Install it with your system package manager."
+    exit 1
+  fi
+fi
+
 for tool in ffmpeg ffprobe; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "$tool is missing. Install the Termux package: pkg install ffmpeg"
