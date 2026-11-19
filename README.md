@@ -25,7 +25,7 @@ Termux packages first:
 
 ```bash
 pkg update
-pkg install python ffmpeg
+pkg install python python-numpy ffmpeg
 ```
 
 Clone the repository, enter its folder, and start the app:
