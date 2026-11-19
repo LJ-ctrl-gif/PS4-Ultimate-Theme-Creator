@@ -9,6 +9,7 @@ on:
       - "app/**"
       - "tests/**"
       - "README.md"
+      - "run-termux.sh"
       - "tools/NOTICE.txt"
       - ".github/workflows/black-void-bundle.yml"
 permissions:
@@ -27,6 +28,8 @@ jobs:
         run: python -m compileall -q app tools
       - name: Check browser JavaScript syntax
         run: node --check app/static/app.js
+      - name: Check Termux launcher shell syntax
+        run: bash -n run-termux.sh
       - name: Build canonical theme asset bundle
         run: python tools/build_black_void_bundle.py
       - name: Validate BLACK VOID app integration
