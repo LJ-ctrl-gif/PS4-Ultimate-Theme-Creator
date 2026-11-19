@@ -129,6 +129,59 @@ def _prune() -> None:
         shutil.rmtree(stale, ignore_errors=True)
 
 
+def list_recent(limit: int = 100) -> list[dict]:
+    """Return safe metadata for workspace jobs without exposing filesystem paths."""
+    if not WORKSPACE.is_dir():
+        return []
+    allowed = {"animated", "slot", "audio", "convert", "package"}
+    found: list[dict] = []
+    for root in WORKSPACE.iterdir():
+        if not root.is_dir() or root.is_symlink():
+            continue
+        prefix, sep, job_id = root.name.partition("-")
+        if not sep or prefix not in allowed or not job_id:
+            continue
+        job = load(prefix, job_id)
+        if job is None:
+            continue
+        total = 0
+        file_count = 0
+        for item in root.rglob("*"):
+            if item.is_file() and not item.is_symlink():
+                try:
+                    total += item.stat().st_size
+                    file_count += 1
+                except OSError:
+                    continue
+        try:
+            updated = root.stat().st_mtime
+        except OSError:
+            updated = 0
+        found.append({
+            "id": job.id,
+            "kind": job.kind,
+            "name": job.original_name[:200],
+            "size_bytes": total,
+            "file_count": file_count,
+            "updated": updated,
+            "has_export": any((job.out_dir / name).is_file()
+                              for name in ("background.raf.zip", "theme.zip", "theme.pkg")),
+        })
+    found.sort(key=lambda item: item["updated"], reverse=True)
+    return found[:max(1, min(int(limit), 200))]
+
+
+def delete(kind: str, job_id: str) -> bool:
+    """Delete one validated job directory; never accepts arbitrary paths."""
+    if kind not in {"animated", "slot", "audio", "convert", "package"}:
+        return False
+    job = load(kind, job_id)
+    if job is None or job.root.is_symlink():
+        return False
+    shutil.rmtree(job.root)
+    return True
+
+
 def touch(job: Job) -> None:
     """Marca el job como usado para que _prune no se lo lleve."""
     try:
