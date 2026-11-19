@@ -34,6 +34,66 @@ function toast(msg, kind = "error") {
   toastTimer = setTimeout(() => { el.hidden = true; }, kind === "ok" ? 3500 : 7000);
 }
 
+async function refreshWorkspace() {
+  const host = $("workspace-list");
+  if (!host) return;
+  host.replaceChildren();
+  const loading = document.createElement("p");
+  loading.className = "card-note";
+  loading.textContent = "Loading workspace…";
+  host.append(loading);
+  try {
+    const result = await api("/api/workspace");
+    host.replaceChildren();
+    const items = result.items || [];
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "card-note";
+      empty.textContent = "No uploaded assets are stored yet.";
+      host.append(empty);
+      return;
+    }
+    for (const item of items) {
+      const row = document.createElement("div");
+      row.className = "workspace-item";
+      const info = document.createElement("div");
+      info.className = "workspace-item-info";
+      const name = document.createElement("div");
+      name.className = "workspace-item-name";
+      name.textContent = item.name || "Unnamed upload";
+      const meta = document.createElement("div");
+      meta.className = "workspace-item-meta";
+      meta.textContent = `${item.kind} · ${fmtBytes(item.size_bytes)} · ${item.file_count} file(s)`;
+      info.append(name, meta);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "btn btn-ghost";
+      remove.textContent = "Delete";
+      remove.setAttribute("aria-label", `Delete ${item.name || "workspace item"}`);
+      remove.addEventListener("click", async () => {
+        if (!window.confirm(`Delete "${item.name || "this upload"}" and its generated files from this workspace?`)) return;
+        remove.disabled = true;
+        try {
+          await api(`/api/workspace/${encodeURIComponent(item.kind)}/${encodeURIComponent(item.id)}`, { method: "DELETE" });
+          toast("Workspace item deleted.", "ok");
+          await refreshWorkspace();
+        } catch (error) {
+          remove.disabled = false;
+          toast(error.message);
+        }
+      });
+      row.append(info, remove);
+      host.append(row);
+    }
+  } catch (error) {
+    host.replaceChildren();
+    const failed = document.createElement("p");
+    failed.className = "card-note";
+    failed.textContent = `Workspace unavailable: ${error.message}`;
+    host.append(failed);
+  }
+}
+
 async function api(url, options) {
   const res = await fetch(url, options);
   let body = null;
@@ -83,7 +143,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
     if (tab.dataset.tab !== "backgrounds") player.pause();
     if (tab.dataset.tab !== "preview") pvPlayer.stop();
     // These three depend on what was done in the other tabs.
-    if (tab.dataset.tab === "package") { refreshChecklist(); renderTree(); }
+    if (tab.dataset.tab === "package") { refreshChecklist(); renderTree(); refreshWorkspace(); }
     if (tab.dataset.tab === "preview") renderPreview();
   });
 });
@@ -1511,6 +1571,7 @@ $("anim-scrub").addEventListener("input", (e) => {
 $("anim-export").addEventListener("click", animatedExport);
 $("anim-reset").addEventListener("click", resetAnimated);
 
+$("workspace-refresh").addEventListener("click", refreshWorkspace);
 $("session-export").addEventListener("click", exportarSesion);
 $("session-import").addEventListener("change", (event) => {
   const file = event.target.files?.[0];
