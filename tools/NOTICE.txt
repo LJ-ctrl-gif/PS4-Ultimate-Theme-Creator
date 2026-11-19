@@ -1,42 +1,28 @@
-Packaging tools
-===============
+PS4 packaging tool prerequisites
+=================================
 
-THIS FOLDER SHIPS EMPTY IN THE REPOSITORY. The binaries are proprietary Sony
-software and are not redistributed here; you have to obtain them separately
-and lay them out like this:
+This directory intentionally contains no Sony publishing binaries.
+
+The package builder requires these files in a supported Windows environment:
 
   tools/
-    orbis-pub-cmd.exe     builds param.sfo and the package image (img_create)
-    at9tool.exe           optional: converts the music to ATRAC9
+    orbis-pub-cmd.exe
     ext/
-      sc.exe              orbis-pub-cmd calls it; without it, it won't start
-      di.exe              same
-      libatrac9.dll       needed to measure the loudness of an .at9
+      sc.exe
+      di.exe
 
-The app works without them: on startup it detects they are missing, disables
-the Package tab on its own and everything else keeps working. Without
-at9tool.exe the music has to be uploaded already converted to .at9.
+Optional audio helpers:
 
-Where they come from
---------------------
+  tools/
+    at9tool.exe
+    ext/
+      libatrac9.dll
 
-orbis-pub-cmd.exe, sc.exe and di.exe come from "PS4 Fake PKG Tools 3.87
-(Patched) V7", packaged by CyB1K, with credit to flat_z, cfwprophet,
-SocraticBliss, TheRadziu, Arczi and Opoisso. It is Sony Interactive
-Entertainment Inc.'s "Publishing Tools ver. 3.87" -- proprietary SDK software
-with binary patches applied by the scene (Custom PKG Key, Fake SELF Support,
-Online Checks Patched). It is not free software and there is no public source,
-which is why the app shells out to it instead of reimplementing it.
+These executables are proprietary software. This repository does not provide,
+mirror, patch, or link to unofficial copies. Obtain any required tools only
+through an authorized source and follow the applicable license terms. Do not
+commit proprietary executables to this public repository.
 
-at9tool.exe is the "SCEI ATRAC9 TOOL", also from Sony's official SDK.
-
-Why only these
---------------
-
-They are the minimum set. Verified empirically: the package they produce is
-byte-for-byte identical to the one from the full 16 MB distribution. The rest
-(the gengp4/orbis-pub-gen GUIs, the orbis-pub-chk validator, the trophy
-utilities and the PSX-PS2-FPKG folder) is unused.
-
-Heads-up: orbis-pub-chk.exe hangs without producing any output. Don't waste
-time on it.
+The artwork generator and BLACK VOID preset export work without the packaging
+executables. Producing an installable PS4 .pkg requires the supported Windows
+packaging environment and all three required files above.
