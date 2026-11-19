@@ -784,27 +784,107 @@ const PKG_CAMPOS = ["pkg-title", "pkg-title-id", "pkg-content-id", "pkg-themecol
                     "pkg-fontcolor", "pkg-fontshadow", "pkg-focuscolor"];
 
 let sesionTimer = null;
+function leerSesionActual() {
+  const campos = {};
+  PKG_CAMPOS.forEach((id) => { if ($(id)) campos[id] = $(id).value; });
+  return {
+    version: 1,
+    slots: { ...slots.chosen },
+    bgm: bgm.jobId,
+    bgmGain: bgm.gain,
+    sfx: { ...sfx.chosen },
+    bgMode: bgMode(),
+    contentIdTouched: Boolean(pkg.contentIdTouched),
+    anim: anim.jobId
+      ? { jobId: anim.jobId, frames: anim.frameCount, wait: anim.wait, size: anim.size }
+      : null,
+    campos,
+  };
+}
+
 function guardarSesion() {
   // Debounced: writing on every keystroke of the title adds nothing.
   clearTimeout(sesionTimer);
   sesionTimer = setTimeout(() => {
     try {
-      const campos = {};
-      PKG_CAMPOS.forEach((id) => { if ($(id)) campos[id] = $(id).value; });
-      localStorage.setItem(SESION_KEY, JSON.stringify({
-        slots: slots.chosen,
-        bgm: bgm.jobId,
-        bgmGain: bgm.gain,
-        sfx: sfx.chosen,
-        bgMode: bgMode(),
-        contentIdTouched: pkg.contentIdTouched,
-        anim: anim.jobId
-          ? { jobId: anim.jobId, frames: anim.frameCount, wait: anim.wait, size: anim.size }
-          : null,
-        campos,
-      }));
-    } catch { /* cuota llena o navegacion privada: no vale la pena molestar */ }
+      localStorage.setItem(SESION_KEY, JSON.stringify(leerSesionActual()));
+    } catch { /* quota llena o navegacion privada: no vale la pena molestar */ }
   }, 400);
+}
+
+function exportarSesion() {
+  try {
+    const data = leerSesionActual();
+    localStorage.setItem(SESION_KEY, JSON.stringify(data));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ps4-theme-session.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast("Session settings exported. Uploaded media is not included.", "ok");
+  } catch (err) {
+    toast("Could not export session: " + err.message);
+  }
+}
+
+async function importarSesion(file) {
+  if (!file) return;
+  if (file.size > 256 * 1024) {
+    toast("Session JSON is too large (maximum 256 KB).");
+    return;
+  }
+  try {
+    const data = JSON.parse(await file.text());
+    const validJob = (value) => typeof value === "string" && /^[0-9a-f]{12}$/.test(value);
+    if (!data || data.version !== 1 || typeof data !== "object") {
+      throw new Error("Unsupported session file.");
+    }
+
+    const clean = {
+      version: 1, slots: {}, bgm: validJob(data.bgm) ? data.bgm : null,
+      bgmGain: Number.isFinite(Number(data.bgmGain))
+        ? Math.max(-24, Math.min(12, Number(data.bgmGain))) : 0,
+      sfx: {}, bgMode: data.bgMode === "animated" ? "animated" : "static",
+      contentIdTouched: Boolean(data.contentIdTouched), anim: null, campos: {},
+    };
+
+    for (const [slotId, jobId] of Object.entries(data.slots || {})) {
+      if (validJob(jobId) && slots.catalog.some((slot) => slot.id === slotId)) {
+        clean.slots[slotId] = jobId;
+      }
+    }
+    for (const [slotId, jobId] of Object.entries(data.sfx || {})) {
+      if (validJob(jobId) && /^[a-z0-9_-]{1,64}$/i.test(slotId)) clean.sfx[slotId] = jobId;
+    }
+    if (data.anim && validJob(data.anim.jobId)) {
+      const chosenSize = Array.isArray(data.anim.size)
+        ? sys.animated_sizes.find((item) =>
+            item.size[0] === Number(data.anim.size[0]) &&
+            item.size[1] === Number(data.anim.size[1]))
+        : null;
+      clean.anim = {
+        jobId: data.anim.jobId,
+        frames: Math.max(2, Math.min(48, Number(data.anim.frames) || 12)),
+        wait: Math.max(0.02, Math.min(5, Number(data.anim.wait) || 0.1)),
+        size: chosenSize ? chosenSize.size : sys.animated_sizes[0].size,
+      };
+    }
+    for (const id of PKG_CAMPOS) {
+      if (typeof data.campos?.[id] === "string") {
+        clean.campos[id] = data.campos[id].slice(0, 128);
+      }
+    }
+
+    localStorage.setItem(SESION_KEY, JSON.stringify(clean));
+    toast("Session imported. Reloading to restore available uploads…", "ok");
+    setTimeout(() => window.location.reload(), 700);
+  } catch (err) {
+    toast("Could not import session: " + err.message);
+  }
 }
 
 /** Is that job still alive?
