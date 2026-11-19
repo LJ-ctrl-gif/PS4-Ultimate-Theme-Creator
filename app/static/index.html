@@ -304,6 +304,16 @@
 
   <!-- ================= EMPAQUETAR ================= -->
   <section class="panel" id="panel-package">
+    <div class="card session-tools">
+      <h2 class="card-title">Workspace session</h2>
+      <p class="card-note">Export or restore your editor settings and upload references. Imported references work only while their original files still exist in this creator's server workspace; this JSON does not contain the uploaded media.</p>
+      <div class="bgm-row">
+        <button id="session-export" class="btn btn-ghost" type="button">Export session JSON</button>
+        <label class="btn btn-ghost">Import session JSON
+          <input id="session-import" type="file" accept=".json,application/json" hidden>
+        </label>
+      </div>
+    </div>
     <div id="pkg-missing" class="notice notice-warn" data-i18n="pkg.missing" hidden></div>
     <p id="pkg-tools-detail" class="card-note" hidden></p>
 
