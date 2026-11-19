@@ -147,6 +147,20 @@ def _budget(frame_count: int, size: tuple[int, int] = ANIMATED_SIZE) -> dict:
 
 # --- System info ----------------------------------------------------------
 
+@app.get("/api/workspace")
+def workspace_list() -> dict:
+    """List uploaded workspace assets without exposing server paths."""
+    return {"items": jobs.list_recent()}
+
+
+@app.delete("/api/workspace/{kind}/{job_id}")
+def workspace_delete(kind: str, job_id: str) -> dict:
+    """Delete one explicitly selected workspace asset."""
+    if not jobs.delete(kind, job_id):
+        raise HTTPException(404, "Workspace item not found.")
+    return {"deleted": True, "id": job_id, "kind": kind}
+
+
 @app.get("/api/system")
 def system_info() -> dict:
     return {
