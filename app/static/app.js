@@ -1487,6 +1487,13 @@ $("anim-scrub").addEventListener("input", (e) => {
 $("anim-export").addEventListener("click", animatedExport);
 $("anim-reset").addEventListener("click", resetAnimated);
 
+$("session-export").addEventListener("click", exportarSesion);
+$("session-import").addEventListener("change", (event) => {
+  const file = event.target.files?.[0];
+  if (file) importarSesion(file);
+  event.target.value = "";
+});
+
 
 // Space = play/pause, arrows = frame by frame. Only with the player visible:
 // in still-image mode those keys are not ours.
