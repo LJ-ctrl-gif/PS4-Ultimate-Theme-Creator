@@ -18,6 +18,32 @@ English and Spanish.
 
 ---
 
+## Android / Termux (phone-only setup)
+
+The artwork editor can run locally on Android through Termux. Install the
+Termux packages first:
+
+```bash
+pkg update
+pkg install python ffmpeg
+```
+
+Clone the repository, enter its folder, and start the app:
+
+```bash
+git clone https://github.com/LJ-ctrl-gif/PS4-Ultimate-Theme-Creator.git
+cd PS4-Ultimate-Theme-Creator
+bash run-termux.sh
+```
+
+Open <http://127.0.0.1:8000> in the phone browser. Keep Termux running while
+using the editor. If dependency installation reports a NumPy build error,
+install Termux's packaged NumPy with `pkg install python-numpy`, then retry
+the launcher. Android is a local artwork-editing route; it does not provide
+the Windows-only proprietary PS4 package toolchain.
+
+---
+
 ## Requirements
 
 | | |
