@@ -9,6 +9,7 @@ on:
       - "app/**"
       - "tests/**"
       - "README.md"
+      - "tools/NOTICE.txt"
       - ".github/workflows/black-void-bundle.yml"
 permissions:
   contents: read
