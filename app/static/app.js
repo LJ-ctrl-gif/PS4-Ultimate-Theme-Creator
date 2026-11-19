@@ -948,6 +948,30 @@ async function restaurarSesion() {
     } catch { perdidos++; }
   }
 
+  if (d.anim?.jobId && /^[0-9a-f]{12}$/.test(d.anim.jobId)) {
+    try {
+      const savedSize = Array.isArray(d.anim.size)
+        ? sys.animated_sizes.find((item) =>
+            item.size[0] === Number(d.anim.size[0]) &&
+            item.size[1] === Number(d.anim.size[1]))
+        : null;
+      const fd = new FormData();
+      fd.append("frames", String(Math.max(2, Math.min(48, Number(d.anim.frames) || 12))));
+      fd.append("size", savedSize ? sizeValue(savedSize) : sizeValue(sys.animated_sizes[0]));
+      const payload = await api(`/api/animated/${d.anim.jobId}/frames`, {
+        method: "POST", body: fd,
+      });
+      await loadBitmaps(payload.frames);
+      applyAnimatedPayload(payload);
+      anim.wait = Math.max(0.02, Math.min(5, Number(d.anim.wait) || sys.default_wait_seconds));
+      $("anim-wait").value = String(anim.wait);
+      $("anim-wait-out").textContent = anim.wait.toFixed(2);
+      updateTiming();
+      player.draw();
+      vivos++;
+    } catch { perdidos++; }
+  }
+
   if (d.bgMode === "animated") $("bgmode-animated").checked = true;
   syncRafOverlap();
 
