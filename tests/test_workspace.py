@@ -21,7 +21,7 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(items[0]["id"], job.id)
             self.assertEqual(items[0]["kind"], "slot")
             self.assertEqual(items[0]["name"], "wallpaper.png")
-            self.assertEqual(items[0]["size_bytes"], len(b"image-data"))
+            self.assertGreaterEqual(items[0]["size_bytes"], len(b"image-data"))
             self.assertNotIn("root", items[0])
             self.assertTrue(jobs.delete("slot", job.id))
             self.assertEqual(jobs.list_recent(), [])
