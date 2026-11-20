@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Assemble BLACK VOID artwork into the canonical PS4 theme image layout."""
+from hashlib import sha256
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 from PIL import Image
@@ -32,7 +33,12 @@ def main():
             im.convert("RGBA").resize((512,512), Image.Resampling.LANCZOS).save(ROOT / "dist" / "icon0.png")
         z.write(ROOT / "dist" / "preview.png", "Image0/texture/preview.png")
         z.write(ROOT / "dist" / "icon0.png", "Sc0/sce_sys/icon0.png")
-        z.writestr("README.txt", "BLACK VOID PS4 theme artwork preset. Image assets only; not an installable PKG. Import the images into PS4 Ultimate Theme Creator, complete theme metadata, then package using legally obtained compatible tools.")
+        z.writestr("README.txt", "BLACK VOID PS4 theme artwork preset. Image assets only; not an installable PKG. Import the images into PS4 Ultimate Theme Creator, complete theme metadata, then package using legally obtained compatible tools.\n\nMANIFEST.sha256 lists the SHA-256 digest of every PNG in this archive. Verify it before importing if you suspect corruption.")
+        manifest = []
+        with ZipFile(OUT, "r") as archive:
+            for name in sorted(n for n in archive.namelist() if n.lower().endswith(".png")):
+                manifest.append(f"{sha256(archive.read(name)).hexdigest()}  {name}")
+        z.writestr("MANIFEST.sha256", "\\n".join(manifest) + "\\n")
     print(f"Created {OUT} with {len(required)+2} mapped PNG files.")
 
 if __name__ == "__main__":
