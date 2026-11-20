@@ -322,6 +322,18 @@
         </div>
         <button id="workspace-refresh" class="btn btn-ghost" type="button">Refresh</button>
       </div>
+      <div class="workspace-filters">
+        <input id="workspace-search" class="input" type="search" placeholder="Search uploaded files…" aria-label="Search uploaded files">
+        <select id="workspace-kind-filter" class="select" aria-label="Filter by asset type">
+          <option value="all">All asset types</option>
+          <option value="slot">Images and icons</option>
+          <option value="animated">Animated backgrounds</option>
+          <option value="audio">Audio</option>
+          <option value="package">Packages</option>
+          <option value="convert">Conversions</option>
+        </select>
+      </div>
+      <p id="workspace-summary" class="card-note" aria-live="polite">Loading workspace…</p>
       <div id="workspace-list" class="workspace-list" aria-live="polite">
         <p class="card-note">Loading workspace…</p>
       </div>
