@@ -34,6 +34,78 @@ function toast(msg, kind = "error") {
   toastTimer = setTimeout(() => { el.hidden = true; }, kind === "ok" ? 3500 : 7000);
 }
 
+let workspaceItems = [];
+
+function renderWorkspace() {
+  const host = $("workspace-list");
+  const summary = $("workspace-summary");
+  if (!host) return;
+  const query = ($("workspace-search")?.value || "").trim().toLocaleLowerCase();
+  const kind = $("workspace-kind-filter")?.value || "all";
+  const filtered = workspaceItems.filter((item) => {
+    const matchesKind = kind === "all" || item.kind === kind;
+    const matchesQuery = !query ||
+      String(item.name || "").toLocaleLowerCase().includes(query) ||
+      String(item.kind || "").toLocaleLowerCase().includes(query);
+    return matchesKind && matchesQuery;
+  });
+  if (summary) {
+    summary.textContent = `${filtered.length} of ${workspaceItems.length} asset(s) · ${fmtBytes(filtered.reduce((sum, item) => sum + (Number(item.size_bytes) || 0), 0))} shown`;
+  }
+  host.replaceChildren();
+  if (!filtered.length) {
+    const empty = document.createElement("p");
+    empty.className = "card-note";
+    empty.textContent = workspaceItems.length
+      ? "No assets match these filters."
+      : "No uploaded assets are stored yet.";
+    host.append(empty);
+    return;
+  }
+  for (const item of filtered) {
+    const row = document.createElement("div");
+    row.className = "workspace-item";
+    const info = document.createElement("div");
+    info.className = "workspace-item-info";
+    const name = document.createElement("div");
+    name.className = "workspace-item-name";
+    name.textContent = item.name || "Unnamed upload";
+    const meta = document.createElement("div");
+    meta.className = "workspace-item-meta";
+    const updated = Number(item.updated);
+    const date = Number.isFinite(updated) && updated > 0
+      ? new Date(updated * 1000).toLocaleString()
+      : "Date unavailable";
+    meta.textContent = `${item.kind} · ${fmtBytes(item.size_bytes)} · ${item.file_count} file(s) · ${date}`;
+    info.append(name, meta);
+    if (item.has_export) {
+      const exportTag = document.createElement("span");
+      exportTag.className = "workspace-export-tag";
+      exportTag.textContent = "Export ready";
+      info.append(exportTag);
+    }
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "btn btn-ghost";
+    remove.textContent = "Delete";
+    remove.setAttribute("aria-label", `Delete ${item.name || "workspace item"}`);
+    remove.addEventListener("click", async () => {
+      if (!window.confirm(`Delete "${item.name || "this upload"}" and its generated files from this workspace?`)) return;
+      remove.disabled = true;
+      try {
+        await api(`/api/workspace/${encodeURIComponent(item.kind)}/${encodeURIComponent(item.id)}`, { method: "DELETE" });
+        toast("Workspace item deleted.", "ok");
+        await refreshWorkspace();
+      } catch (error) {
+        remove.disabled = false;
+        toast(error.message);
+      }
+    });
+    row.append(info, remove);
+    host.append(row);
+  }
+}
+
 async function refreshWorkspace() {
   const host = $("workspace-list");
   if (!host) return;
@@ -44,53 +116,16 @@ async function refreshWorkspace() {
   host.append(loading);
   try {
     const result = await api("/api/workspace");
-    host.replaceChildren();
-    const items = result.items || [];
-    if (!items.length) {
-      const empty = document.createElement("p");
-      empty.className = "card-note";
-      empty.textContent = "No uploaded assets are stored yet.";
-      host.append(empty);
-      return;
-    }
-    for (const item of items) {
-      const row = document.createElement("div");
-      row.className = "workspace-item";
-      const info = document.createElement("div");
-      info.className = "workspace-item-info";
-      const name = document.createElement("div");
-      name.className = "workspace-item-name";
-      name.textContent = item.name || "Unnamed upload";
-      const meta = document.createElement("div");
-      meta.className = "workspace-item-meta";
-      meta.textContent = `${item.kind} · ${fmtBytes(item.size_bytes)} · ${item.file_count} file(s)`;
-      info.append(name, meta);
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "btn btn-ghost";
-      remove.textContent = "Delete";
-      remove.setAttribute("aria-label", `Delete ${item.name || "workspace item"}`);
-      remove.addEventListener("click", async () => {
-        if (!window.confirm(`Delete "${item.name || "this upload"}" and its generated files from this workspace?`)) return;
-        remove.disabled = true;
-        try {
-          await api(`/api/workspace/${encodeURIComponent(item.kind)}/${encodeURIComponent(item.id)}`, { method: "DELETE" });
-          toast("Workspace item deleted.", "ok");
-          await refreshWorkspace();
-        } catch (error) {
-          remove.disabled = false;
-          toast(error.message);
-        }
-      });
-      row.append(info, remove);
-      host.append(row);
-    }
+    workspaceItems = Array.isArray(result.items) ? result.items : [];
+    renderWorkspace();
   } catch (error) {
+    workspaceItems = [];
     host.replaceChildren();
     const failed = document.createElement("p");
     failed.className = "card-note";
     failed.textContent = `Workspace unavailable: ${error.message}`;
     host.append(failed);
+    if ($("workspace-summary")) $("workspace-summary").textContent = "Workspace unavailable.";
   }
 }
 
