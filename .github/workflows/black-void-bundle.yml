@@ -46,11 +46,24 @@ jobs:
           from zipfile import ZipFile
           from pathlib import Path
           path = Path("dist/BLACK-VOID-theme-assets.zip")
+          import hashlib
           with ZipFile(path) as archive:
-              pngs = [name for name in archive.namelist() if name.lower().endswith(".png")]
+              names = archive.namelist()
+              pngs = [name for name in names if name.lower().endswith(".png")]
               assert len(pngs) == 32, f"Expected 32 PNG files, found {len(pngs)}"
-              assert "Image0/theme.xml" not in archive.namelist(), "Preset bundle must not pretend to be a complete theme"
-          print(f"Validated {len(pngs)} PNG files in {path.stat().st_size} bytes")
+              assert "Image0/theme.xml" not in names, "Preset bundle must not pretend to be a complete theme"
+              assert "MANIFEST.sha256" in names, "Missing SHA-256 manifest"
+              lines = archive.read("MANIFEST.sha256").decode("utf-8").splitlines()
+              checks = {}
+              for line in lines:
+                  digest, member = line.split("  ", 1)
+                  assert member not in checks, f"Duplicate manifest entry: {member}"
+                  checks[member] = digest
+              assert set(checks) == set(pngs), "Manifest does not cover exactly every PNG"
+              for member, digest in checks.items():
+                  actual = hashlib.sha256(archive.read(member)).hexdigest()
+                  assert actual == digest, f"Checksum mismatch: {member}"
+          print(f"Validated {len(pngs)} PNG files and SHA-256 checksums in {path.stat().st_size} bytes")
           PY
       - uses: actions/upload-artifact@v4
         with:
