@@ -1607,6 +1607,8 @@ $("anim-export").addEventListener("click", animatedExport);
 $("anim-reset").addEventListener("click", resetAnimated);
 
 $("workspace-refresh").addEventListener("click", refreshWorkspace);
+$("workspace-search").addEventListener("input", renderWorkspace);
+$("workspace-kind-filter").addEventListener("change", renderWorkspace);
 $("session-export").addEventListener("click", exportarSesion);
 $("session-import").addEventListener("change", (event) => {
   const file = event.target.files?.[0];
