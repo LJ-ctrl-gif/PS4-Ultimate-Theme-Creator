@@ -38,7 +38,7 @@ def main():
         with ZipFile(OUT, "r") as archive:
             for name in sorted(n for n in archive.namelist() if n.lower().endswith(".png")):
                 manifest.append(f"{sha256(archive.read(name)).hexdigest()}  {name}")
-        z.writestr("MANIFEST.sha256", "\\n".join(manifest) + "\\n")
+        z.writestr("MANIFEST.sha256", "\n".join(manifest) + "\n")
     print(f"Created {OUT} with {len(required)+2} mapped PNG files.")
 
 if __name__ == "__main__":
