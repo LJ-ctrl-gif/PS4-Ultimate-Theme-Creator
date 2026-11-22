@@ -1302,10 +1302,23 @@ function refreshChecklist() {
       </li>`)
     .join("");
 
-  $("pkg-build").disabled = !slots.chosen.home || !sys.pkg_tools;
+  const toolchainReady = Boolean(sys.pkg_tools);
+  const homeReady = Boolean(slots.chosen.home);
+  $("pkg-build").disabled = !homeReady || !toolchainReady;
   $("pkg-hint").textContent = t(
-    !sys.pkg_tools ? "pkg.hint.noTools"
-      : slots.chosen.home ? "pkg.hint.ready" : "pkg.hint.needHome");
+    !toolchainReady ? "pkg.hint.noTools"
+      : homeReady ? "pkg.hint.ready" : "pkg.hint.needHome");
+  const readiness = $("pkg-readiness");
+  if (!toolchainReady) {
+    readiness.className = "notice notice-warn";
+    readiness.textContent = "Artwork editing and previews are available, but PS4 PKG creation is blocked: this server needs Windows and the required authorized Sony publishing tools. No installable PKG can be created until those prerequisites are present.";
+  } else if (!homeReady) {
+    readiness.className = "notice notice-warn";
+    readiness.textContent = "Packaging tools are available. Add a home-screen background to complete the required theme assets before building.";
+  } else {
+    readiness.className = "notice notice-ok";
+    readiness.textContent = "Local build prerequisites are ready. Review the theme settings, then build the package.";
+  }
 }
 
 /** Content tree, built from the slot catalogue.
