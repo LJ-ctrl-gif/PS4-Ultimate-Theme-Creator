@@ -8,6 +8,7 @@ else keeps working.
 from __future__ import annotations
 
 import json
+import hashlib
 import struct
 import time
 import shutil
@@ -392,6 +393,27 @@ async def black_void_preset_import(file: UploadFile = File(...)) -> dict:
             if len(infos) > 64 or sum(info.file_size for info in infos) > 128 * 1024 * 1024:
                 raise HTTPException(413, "The preset archive is larger than the allowed expanded size.")
             names = {info.filename for info in infos if not info.is_dir()}
+            # Verify the optional canonical manifest before processing any image.
+            # Legacy user-created ZIPs without a manifest remain importable.
+            if "MANIFEST.sha256" in names:
+                try:
+                    manifest_text = archive.read("MANIFEST.sha256").decode("utf-8")
+                    checksums = {}
+                    for line in manifest_text.splitlines():
+                        digest, member = line.split("  ", 1)
+                        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+                            raise ValueError("invalid SHA-256 digest")
+                        if member in checksums or member not in names or not member.lower().endswith(".png"):
+                            raise ValueError("invalid or duplicate manifest member")
+                        checksums[member] = digest
+                    png_members = {name for name in names if name.lower().endswith(".png")}
+                    if set(checksums) != png_members:
+                        raise ValueError("manifest does not cover every PNG")
+                    for member, expected in checksums.items():
+                        if hashlib.sha256(archive.read(member)).hexdigest() != expected:
+                            raise ValueError(f"checksum mismatch: {member}")
+                except (UnicodeDecodeError, ValueError) as exc:
+                    raise HTTPException(422, "BLACK VOID preset checksum manifest is invalid or an image has changed.") from exc
             mapped: dict[str, bytes] = {}
             for slot_id, spec in IMAGE_SLOTS.items():
                 member = (
