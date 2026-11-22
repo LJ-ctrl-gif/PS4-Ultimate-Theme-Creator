@@ -442,6 +442,7 @@ input[type=range]:disabled { opacity: .45; cursor: default; }
   border-left-width: 3px;
 }
 .notice-warn { border-left-color: var(--warn); background: #201a10; color: #e8d5b5; }
+.notice-ok { border-left-color: var(--ok); background: #102019; color: #c7eadb; }
 
 .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
 .checklist li {
