@@ -18,18 +18,26 @@ from app import jobs, main, media
 from app.config import IMAGE_SLOTS
 
 
-def make_archive() -> bytes:
+def make_archive(manifest: bool = False, corrupt: bool = False) -> bytes:
     out = io.BytesIO()
     png = io.BytesIO()
     Image.new("RGBA", (2, 2), (0, 0, 0, 255)).save(png, format="PNG")
     image_blob = png.getvalue()
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as archive:
+        members = []
         for slot_id, spec in IMAGE_SLOTS.items():
             member = (
                 "Sc0/sce_sys/icon0.png" if slot_id == "icon0"
                 else f"Image0/{spec['path']}"
             )
             archive.writestr(member, image_blob)
+            members.append(member)
+        if manifest:
+            import hashlib
+            rows = [f"{hashlib.sha256(image_blob).hexdigest()}  {name}" for name in members]
+            if corrupt:
+                rows[0] = "0" * 64 + rows[0][64:]
+            archive.writestr("MANIFEST.sha256", "\\n".join(rows) + "\\n")
     return out.getvalue()
 
 
@@ -77,10 +85,10 @@ class BlackVoidImportTests(unittest.TestCase):
         dest.write_bytes(b"preview")
         return dest
 
-    def invoke(self):
+    def invoke(self, manifest: bool = False, corrupt: bool = False):
         upload = UploadFile(
             filename="black-void.zip",
-            file=io.BytesIO(make_archive()),
+            file=io.BytesIO(make_archive(manifest=manifest, corrupt=corrupt)),
         )
         return asyncio.run(main.black_void_preset_import(upload))
 
@@ -97,6 +105,22 @@ class BlackVoidImportTests(unittest.TestCase):
         self.assertEqual(set(result["slots"]), set(IMAGE_SLOTS))
         self.assertTrue(all((job.preview_dir / "preview.webp").is_file()
                             for job in self.created))
+
+    def test_valid_checksum_manifest_imports(self):
+        with (
+            patch.object(jobs, "create", side_effect=self.fake_create),
+            patch.object(media, "probe", side_effect=self.fake_probe),
+            patch.object(media, "render_image", side_effect=self.fake_render),
+        ):
+            result = self.invoke(manifest=True)
+        self.assertEqual(result["imported"], len(IMAGE_SLOTS))
+
+    def test_checksum_mismatch_is_rejected_before_import(self):
+        with patch.object(jobs, "create", side_effect=self.fake_create):
+            with self.assertRaises(main.HTTPException) as caught:
+                self.invoke(manifest=True, corrupt=True)
+        self.assertEqual(caught.exception.status_code, 422)
+        self.assertEqual(self.created, [])
 
     def test_failed_image_rolls_back_all_created_jobs(self):
         def fail_on_second(_path):
