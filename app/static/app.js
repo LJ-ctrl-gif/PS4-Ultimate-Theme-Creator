@@ -1437,6 +1437,16 @@ async function bootPackage() {
   $("pkg-tools-detail").textContent = missingTools.length
     ? `Required to build a PS4 theme PKG: ${missingTools.join(", ")}`
     : "";
+  const toolchainItems = [
+    ["Windows host", "Windows host (the Sony packaging tools are Windows executables)"],
+    ["tools/orbis-pub-cmd.exe", "orbis-pub-cmd.exe"],
+    ["tools/ext/sc.exe", "ext/sc.exe"],
+    ["tools/ext/di.exe", "ext/di.exe"],
+  ];
+  $("pkg-toolchain-checklist").innerHTML = `<h3>PS4 package toolchain</h3><ul>${toolchainItems.map(([label, requirement]) => {
+    const missing = missingTools.includes(requirement);
+    return `<li class="${missing ? "missing" : "available"}"><span>${label}</span><b>${missing ? "Missing" : "Available"}</b></li>`;
+  }).join("")}</ul>`;
 
   $("pkg-title").value = d.defaults.title;
   $("pkg-title-id").value = d.defaults.title_id;
