@@ -444,6 +444,14 @@ input[type=range]:disabled { opacity: .45; cursor: default; }
 .notice-warn { border-left-color: var(--warn); background: #201a10; color: #e8d5b5; }
 .notice-ok { border-left-color: var(--ok); background: #102019; color: #c7eadb; }
 
+.toolchain-checklist { margin: -6px 0 18px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.toolchain-checklist h3 { margin: 0 0 9px; font-size: 13px; font-weight: 600; }
+.toolchain-checklist ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.toolchain-checklist li { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; }
+.toolchain-checklist li b { font-weight: 600; }
+.toolchain-checklist li.missing b { color: var(--warn); }
+.toolchain-checklist li.available b { color: var(--ok); }
+
 .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
 .checklist li {
   display: flex; align-items: center; gap: 13px;
