@@ -37,7 +37,7 @@ def make_archive(manifest: bool = False, corrupt: bool = False) -> bytes:
             rows = [f"{hashlib.sha256(image_blob).hexdigest()}  {name}" for name in members]
             if corrupt:
                 rows[0] = "0" * 64 + rows[0][64:]
-            archive.writestr("MANIFEST.sha256", "\\n".join(rows) + "\\n")
+            archive.writestr("MANIFEST.sha256", "\n".join(rows) + "\n")
     return out.getvalue()
 
 
