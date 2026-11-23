@@ -41,6 +41,13 @@ class ThemeSourceExportTests(unittest.TestCase):
                 animated_job="",
                 audio_job="",
                 sfx="{}",
+                frames=24,
+                wait_seconds=0.1,
+                backend=main.DEFAULT_BACKEND,
+                themecolor=0,
+                fontcolor=main.theme_xml.DEFAULTS["fontcolor"],
+                fontshadowcolor=main.theme_xml.DEFAULTS["fontshadowcolor"],
+                focuscolor=main.theme_xml.DEFAULTS["focuscolor"],
             ))
             response = main.theme_source_download(result["job_id"])
 
@@ -62,7 +69,12 @@ class ThemeSourceExportTests(unittest.TestCase):
             with self.assertRaises(HTTPException) as caught:
                 asyncio.run(main.theme_source_export(
                     title="BLACK VOID", slots="{}", animated_job="",
-                    audio_job="", sfx="{}",
+                    audio_job="", sfx="{}", frames=24,
+                    wait_seconds=0.1, backend=main.DEFAULT_BACKEND,
+                    themecolor=0,
+                    fontcolor=main.theme_xml.DEFAULTS["fontcolor"],
+                    fontshadowcolor=main.theme_xml.DEFAULTS["fontshadowcolor"],
+                    focuscolor=main.theme_xml.DEFAULTS["focuscolor"],
                 ))
         self.assertEqual(caught.exception.status_code, 400)
 
