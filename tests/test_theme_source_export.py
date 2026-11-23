@@ -58,11 +58,23 @@ class ThemeSourceExportTests(unittest.TestCase):
             self.assertIn("theme.xml", names)
             self.assertIn("texture/function_icon/setting.png", names)
             self.assertIn("TRANSFER-README.txt", names)
+            self.assertIn("TRANSFER-MANIFEST.json", names)
             self.assertIn("MANIFEST.sha256", names)
             readme = archive.read("TRANSFER-README.txt").decode("utf-8")
             self.assertIn("NOT an installable PS4 PKG", readme)
+            self.assertIn("USB drive", readme)
+            transfer = __import__("json").loads(archive.read("TRANSFER-MANIFEST.json"))
+            self.assertFalse(transfer["installable"])
+            self.assertGreaterEqual(transfer["file_count"], 3)
+            records = {item["path"]: item for item in transfer["files"]}
+            self.assertIn("theme.xml", records)
+            self.assertEqual(
+                records["theme.xml"]["sha256"],
+                __import__("hashlib").sha256(archive.read("theme.xml")).hexdigest(),
+            )
             manifest = archive.read("MANIFEST.sha256").decode("utf-8")
             self.assertIn("theme.xml", manifest)
+            self.assertIn("TRANSFER-MANIFEST.json", manifest)
 
     def test_rejects_export_without_home_background(self):
         with patch.object(main, "_resolve_slot_jobs", return_value={}):
