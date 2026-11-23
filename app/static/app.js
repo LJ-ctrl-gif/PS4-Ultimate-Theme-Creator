@@ -1362,24 +1362,11 @@ async function syncContentId() {
   } catch { /* mientras se escribe puede quedar a medias, no molestar */ }
 }
 
-async function packageBuild() {
-  const btn = $("pkg-build");
-  const original = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = "Empaquetando…";
-  $("pkg-result").hidden = true;
 
+function themeFormData() {
   const fd = new FormData();
   fd.append("title", $("pkg-title").value.trim());
-  fd.append("title_id", $("pkg-title-id").value.trim().toUpperCase());
-  fd.append("content_id", $("pkg-content-id").value.trim().toUpperCase());
-  fd.append("category", pkg.defaults.defaults.category);
-  // Fixed at 32 zeros: it encrypts the package and does not travel inside it,
-  // so the installer has to take it for granted. See the Package tab note.
-  fd.append("passcode", pkg.defaults.defaults.passcode);
-  fd.append("mode", pkg.defaults.defaults.mode);
   fd.append("slots", JSON.stringify(slots.chosen));
-  // Only goes into the package when the chosen mode is animated.
   fd.append("animated_job", animActive() ? anim.jobId : "");
   fd.append("audio_job", bgm.jobId || "");
   fd.append("sfx", JSON.stringify(sfx.chosen));
@@ -1390,6 +1377,50 @@ async function packageBuild() {
   fd.append("fontcolor", hexToArgb($("pkg-fontcolor").value));
   fd.append("fontshadowcolor", hexToArgb($("pkg-fontshadow").value));
   fd.append("focuscolor", hexToArgb($("pkg-focuscolor").value));
+  return fd;
+}
+
+async function exportThemeSource() {
+  const btn = $("theme-source-export");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Preparing source ZIP…";
+  try {
+    const result = await api("/api/theme-source/export", {
+      method: "POST", body: themeFormData(),
+    });
+    const rows = result.included.map((item) =>
+      `<div class="result-row"><span>${item.asset}</span><b>${fmtBytes(item.bytes)}</b></div>`
+    ).join("");
+    $("pkg-result").hidden = false;
+    $("pkg-result").innerHTML = `
+      <h2 class="card-title">Theme source export ready · ${fmtBytes(result.archive_bytes)}</h2>
+      <div class="result-rows">${rows}</div>
+      <p class="card-note"><code>${result.archive_name}</code></p>
+      <p class="notice notice-warn">Source archive only — not an installable PS4 PKG.</p>
+      <a class="dl-btn" style="margin-top:14px" href="${result.download}" download>Download theme source ZIP</a>`;
+    toast("Theme source ZIP created.", "ok");
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+async function packageBuild() {
+  const btn = $("pkg-build");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Empaquetando…";
+  $("pkg-result").hidden = true;
+
+  const fd = themeFormData();
+  fd.append("title_id", $("pkg-title-id").value.trim().toUpperCase());
+  fd.append("content_id", $("pkg-content-id").value.trim().toUpperCase());
+  fd.append("category", pkg.defaults.defaults.category);
+  fd.append("passcode", pkg.defaults.defaults.passcode);
+  fd.append("mode", pkg.defaults.defaults.mode);
 
   try {
     const r = await api("/api/package/build", { method: "POST", body: fd });
@@ -1482,6 +1513,7 @@ async function bootPackage() {
   $("pkg-title-id").addEventListener("input", syncContentId);
   $("pkg-content-id").addEventListener("input", () => { pkg.contentIdTouched = true; });
   $("pkg-build").addEventListener("click", packageBuild);
+  $("theme-source-export").addEventListener("click", exportThemeSource);
 }
 
 
