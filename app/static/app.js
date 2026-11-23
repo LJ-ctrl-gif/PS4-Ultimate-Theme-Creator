@@ -1395,9 +1395,10 @@ async function exportThemeSource() {
     $("pkg-result").hidden = false;
     $("pkg-result").innerHTML = `
       <h2 class="card-title">Theme source export ready · ${fmtBytes(result.archive_bytes)}</h2>
+      <p class="card-note">${result.file_count} files included · SHA-256 integrity manifest included.</p>
       <div class="result-rows">${rows}</div>
       <p class="card-note"><code>${result.archive_name}</code></p>
-      <p class="notice notice-warn">Source archive only — not an installable PS4 PKG.</p>
+      <p class="notice notice-warn">Source archive only — not an installable PS4 PKG. Transfer it to an authorized packaging environment.</p>
       <a class="dl-btn" style="margin-top:14px" href="${result.download}" download>Download theme source ZIP</a>`;
     toast("Theme source ZIP created.", "ok");
   } catch (err) {
