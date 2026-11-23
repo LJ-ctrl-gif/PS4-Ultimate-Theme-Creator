@@ -1154,6 +1154,112 @@ async def package_build(
     }
 
 
+
+
+@app.post("/api/theme-source/export")
+async def theme_source_export(
+    title: str = Form(...),
+    slots: str = Form("{}"),
+    animated_job: str = Form(""),
+    audio_job: str = Form(""),
+    sfx: str = Form("{}"),
+    frames: int = Form(24),
+    wait_seconds: float = Form(0.1),
+    backend: str = Form(DEFAULT_BACKEND),
+    themecolor: int = Form(0),
+    fontcolor: str = Form(theme_xml.DEFAULTS["fontcolor"]),
+    fontshadowcolor: str = Form(theme_xml.DEFAULTS["fontshadowcolor"]),
+    focuscolor: str = Form(theme_xml.DEFAULTS["focuscolor"]),
+) -> dict:
+    """Exports the assembled theme source tree without invoking PKG tools."""
+    try:
+        raw_slots = json.loads(slots or "{}")
+        parsed_sfx = json.loads(sfx or "{}")
+        if not isinstance(raw_slots, dict) or not isinstance(parsed_sfx, dict):
+            raise ValueError
+    except ValueError as exc:
+        raise HTTPException(422, "Slots and SFX must be JSON objects.") from exc
+
+    slot_jobs = _resolve_slot_jobs({str(k): str(v) for k, v in raw_slots.items()})
+    if "home" not in slot_jobs:
+        raise HTTPException(400, "The home background is missing.")
+
+    frame_count = frames
+    if animated_job:
+        anim_size = tuple(_get_job("animated", animated_job).meta.get("size") or ANIMATED_SIZE)
+        frame_count = _clamp_frames(frames, anim_size)
+        try:
+            theme.check_frame_count(frame_count)
+            theme.check_budget(frame_count * dds_bytes_for(*anim_size))
+        except ValueError as exc:
+            raise HTTPException(413, str(exc)) from exc
+
+    settings = {
+        "label": title.strip(),
+        "themecolor": themecolor,
+        "fontcolor": fontcolor.strip(),
+        "fontshadowcolor": fontshadowcolor.strip(),
+        "focuscolor": focuscolor.strip(),
+    }
+    try:
+        theme_xml.build_theme_xml(**settings)
+    except theme_xml.ThemeXmlError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    export_job = jobs.create("package", "theme-source.zip", b"\0")
+    work_dir = export_job.root / "build"
+    content_dir = work_dir / "content"
+    content_dir.mkdir(parents=True, exist_ok=True)
+    archive_path = work_dir / "theme-source.zip"
+    try:
+        included = _collect_theme_assets(
+            slot_jobs, settings, content_dir, audio_job=audio_job,
+            sfx_jobs={str(k): str(v) for k, v in parsed_sfx.items()},
+            animated_job=animated_job, frames=frame_count,
+            wait_seconds=max(0.01, min(10.0, wait_seconds)), backend=backend,
+        )
+        readme = (
+            "BLACK VOID / PS4 THEME SOURCE EXPORT\\n"
+            "This ZIP contains the assembled theme content tree.\\n"
+            "It is NOT an installable PS4 PKG and cannot be installed directly.\\n"
+            "A supported, authorized PS4 theme packaging environment is still required.\\n"
+            "Keep the directory structure unchanged when transferring the files.\\n"
+        )
+        (content_dir / "TRANSFER-README.txt").write_text(readme, encoding="utf-8")
+        manifest_rows = []
+        for path in sorted(p for p in content_dir.rglob("*") if p.is_file()):
+            relative = path.relative_to(content_dir).as_posix()
+            manifest_rows.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {relative}")
+        with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
+            for path in sorted(p for p in content_dir.rglob("*") if p.is_file()):
+                archive.write(path, path.relative_to(content_dir).as_posix())
+            archive.writestr("MANIFEST.sha256", "\\n".join(manifest_rows) + "\\n")
+        export_job.meta["source_zip"] = archive_path.name
+        export_job.save()
+    except Exception:
+        jobs.delete("package", export_job.id)
+        raise
+
+    return {
+        "job_id": export_job.id,
+        "download": f"/api/theme-source/{export_job.id}/download",
+        "archive_name": archive_path.name,
+        "archive_bytes": archive_path.stat().st_size,
+        "included": included,
+        "installable": False,
+    }
+
+
+@app.get("/api/theme-source/{job_id}/download")
+def theme_source_download(job_id: str) -> FileResponse:
+    job = _get_job("package", job_id)
+    name = str(job.meta.get("source_zip") or "")
+    path = job.root / "build" / name
+    if not name or Path(name).name != name or not path.is_file():
+        raise HTTPException(404, "That theme source export is no longer available.")
+    return FileResponse(path, media_type="application/zip", filename="BLACK-VOID-theme-source.zip")
+
+
 @app.get("/api/package/{job_id}/download")
 def package_download(job_id: str) -> FileResponse:
     job = _get_job("package", job_id)
