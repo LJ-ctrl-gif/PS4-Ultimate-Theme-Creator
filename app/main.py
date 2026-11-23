@@ -1219,13 +1219,39 @@ async def theme_source_export(
             wait_seconds=max(0.01, min(10.0, wait_seconds)), backend=backend,
         )
         readme = (
-            "BLACK VOID / PS4 THEME SOURCE EXPORT\n"
-            "This ZIP contains the assembled theme content tree.\n"
-            "It is NOT an installable PS4 PKG and cannot be installed directly.\n"
-            "A supported, authorized PS4 theme packaging environment is still required.\n"
-            "Keep the directory structure unchanged when transferring the files.\n"
+            "BLACK VOID / PS4 THEME SOURCE EXPORT\\n"
+            "This ZIP contains the assembled theme content tree.\\n"
+            "It is NOT an installable PS4 PKG and cannot be installed directly.\\n"
+            "Do not copy this source ZIP to the PS4 expecting it to install as a theme.\\n"
+            "For phone-to-computer handoff: download this ZIP on Android, copy it to a USB drive or trusted storage,\\n"
+            "then give the unchanged archive to a supported, authorized PS4 theme packaging environment.\\n"
+            "Keep the directory structure unchanged when extracting the files.\\n"
         )
         (content_dir / "TRANSFER-README.txt").write_text(readme, encoding="utf-8")
+
+        file_records = []
+        for path in sorted(p for p in content_dir.rglob("*") if p.is_file()):
+            relative = path.relative_to(content_dir).as_posix()
+            data = path.read_bytes()
+            file_records.append({
+                "path": relative,
+                "bytes": len(data),
+                "sha256": hashlib.sha256(data).hexdigest(),
+            })
+        transfer_manifest = {
+            "schema_version": 1,
+            "project": "BLACK VOID",
+            "target": "PS4 theme source",
+            "archive_format": "zip",
+            "installable": False,
+            "file_count": len(file_records),
+            "files": file_records,
+            "manifest_note": "TRANSFER-MANIFEST.json does not hash itself; MANIFEST.sha256 covers every file in this archive except itself.",
+        }
+        (content_dir / "TRANSFER-MANIFEST.json").write_text(
+            json.dumps(transfer_manifest, indent=2) + "\\n", encoding="utf-8"
+        )
+
         manifest_rows = []
         for path in sorted(p for p in content_dir.rglob("*") if p.is_file()):
             relative = path.relative_to(content_dir).as_posix()
@@ -1233,7 +1259,7 @@ async def theme_source_export(
         with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
             for path in sorted(p for p in content_dir.rglob("*") if p.is_file()):
                 archive.write(path, path.relative_to(content_dir).as_posix())
-            archive.writestr("MANIFEST.sha256", "\n".join(manifest_rows) + "\n")
+            archive.writestr("MANIFEST.sha256", "\\n".join(manifest_rows) + "\\n")
         export_job.meta["source_zip"] = archive_path.name
         export_job.save()
     except Exception:
@@ -1246,6 +1272,9 @@ async def theme_source_export(
         "archive_name": archive_path.name,
         "archive_bytes": archive_path.stat().st_size,
         "included": included,
+        "file_count": len(file_records),
+        "integrity_manifest": "MANIFEST.sha256",
+        "transfer_manifest": "TRANSFER-MANIFEST.json",
         "installable": False,
     }
 
