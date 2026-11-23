@@ -113,6 +113,17 @@ you don't upload keep the system ones.
 
 ![Icons tab](docs/02-icons.png)
 
+## Theme source ZIP export
+
+The Package tab includes **Export theme source ZIP**. It assembles the selected
+backgrounds, icons, optional audio, and optional animated scene into their
+theme content paths, then adds a SHA-256 manifest. The archive is useful for
+transferring or backing up the assembled source tree.
+
+**It is not an installable PS4 PKG.** The source ZIP does not contain generated
+package metadata or the proprietary publishing output. Installing a theme
+still requires a supported, authorized packaging environment.
+
 ## BLACK VOID preset import
 
 The generated `BLACK-VOID-theme-assets.zip` can be imported into a running
