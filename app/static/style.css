@@ -984,3 +984,16 @@ input[type=range]:disabled { opacity: .45; cursor: default; }
   .workspace-library-head { align-items:center; }
   .workspace-filters { grid-template-columns:1fr; }
 }
+
+
+/* One-file, token-scoped LAN handoff */
+.transfer-share {
+  margin-top:16px; padding:14px; border:1px solid var(--line);
+  border-radius:var(--radius-sm); background:var(--bg-sunken);
+}
+.transfer-share b { display:block; margin-bottom:7px; color:var(--accent); }
+.transfer-share p { margin:7px 0; color:var(--txt-dim); font-size:13px; line-height:1.5; }
+.transfer-share code {
+  display:block; padding:10px; border-radius:8px; overflow-wrap:anywhere;
+  background:var(--bg); color:var(--txt); border:1px solid var(--line-soft);
+}
