@@ -9,6 +9,10 @@ from __future__ import annotations
 
 import json
 import hashlib
+import html as html_lib
+import ipaddress
+import os
+import secrets
 import struct
 import time
 import shutil
@@ -17,7 +21,7 @@ from io import BytesIO
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import at9, jobs, mdx, media, pkg, raf, theme, theme_xml, vag
@@ -56,6 +60,25 @@ from .dds import DEFAULT_BACKEND, available_backends, encode_frame, encode_seque
 from .media import MediaError
 
 app = FastAPI(title="PS4 Theme Asset Creator", docs_url=None, redoc_url=None)
+
+LAN_TRANSFER_TOKEN = os.environ.get("BLACK_VOID_LAN_TOKEN", "")
+
+
+@app.middleware("http")
+async def restrict_lan_clients(request, call_next):
+    client_host = request.client.host if request.client else ""
+    try:
+        remote_client = not ipaddress.ip_address(client_host).is_loopback
+    except ValueError:
+        remote_client = client_host not in {"localhost", "testclient"}
+    if remote_client:
+        prefix = f"/transfer/{LAN_TRANSFER_TOKEN}/" if LAN_TRANSFER_TOKEN else ""
+        if not prefix or not request.url.path.startswith(prefix):
+            return PlainTextResponse(
+                "LAN sharing is limited to the tokenized theme download page.",
+                status_code=403,
+            )
+    return await call_next(request)
 
 #: Upload cap. A source video can be large; the result never is.
 MAX_UPLOAD_BYTES = 512 * 1024 * 1024
@@ -1275,8 +1298,49 @@ async def theme_source_export(
         "file_count": len(file_records),
         "integrity_manifest": "MANIFEST.sha256",
         "transfer_manifest": "TRANSFER-MANIFEST.json",
+        "transfer_path": (
+            f"/transfer/{LAN_TRANSFER_TOKEN}/{export_job.id}"
+            if LAN_TRANSFER_TOKEN else None
+        ),
         "installable": False,
     }
+
+
+@app.get("/transfer/{token}/{job_id}", response_class=HTMLResponse)
+def theme_source_transfer_page(token: str, job_id: str) -> HTMLResponse:
+    if not LAN_TRANSFER_TOKEN or not secrets.compare_digest(token, LAN_TRANSFER_TOKEN):
+        raise HTTPException(404, "Transfer link not found.")
+    job = _get_job("package", job_id)
+    name = str(job.meta.get("source_zip") or "")
+    path = job.root / "build" / name
+    if not name or Path(name).name != name or not path.is_file():
+        raise HTTPException(404, "That theme source export is no longer available.")
+    safe_name = html_lib.escape(name)
+    download_path = f"/transfer/{token}/{job_id}/download"
+    page = f"""<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BLACK VOID theme transfer</title>
+<style>
+:root{{color-scheme:dark;font-family:system-ui,sans-serif;background:#080808;color:#eee}}
+body{{max-width:680px;margin:8vh auto;padding:24px}}
+main{{border:1px solid #76202a;border-radius:18px;padding:24px;background:#151010}}
+h1{{color:#ff4545}}p{{line-height:1.6;color:#ccc}}
+a{{display:block;text-align:center;padding:14px;border-radius:10px;background:#9e1726;color:white;text-decoration:none;font-weight:700}}
+small{{color:#aaa}}.warn{{border-left:3px solid #d99b42;padding:10px 14px;background:#211a10}}
+</style><main><h1>BLACK VOID</h1><h2>Theme source transfer</h2>
+<p>File: <strong>{safe_name}</strong></p>
+<p class="warn">This is a source ZIP, not an installable PS4 PKG. The PS4 cannot install this archive as a theme.</p>
+<a href="{download_path}">Download theme source ZIP</a>
+<p><small>Only download this file on a device you trust. This temporary link grants access to this archive only.</small></p>
+</main></html>"""
+    return HTMLResponse(page)
+
+
+@app.get("/transfer/{token}/{job_id}/download")
+def theme_source_lan_download(token: str, job_id: str) -> FileResponse:
+    if not LAN_TRANSFER_TOKEN or not secrets.compare_digest(token, LAN_TRANSFER_TOKEN):
+        raise HTTPException(404, "Transfer link not found.")
+    return theme_source_download(job_id)
 
 
 @app.get("/api/theme-source/{job_id}/download")
