@@ -37,7 +37,21 @@ bash run-termux.sh
 ```
 
 Open <http://127.0.0.1:8000> in the phone browser. Keep Termux running while
-using the editor. If dependency installation reports a NumPy build error,
+using the editor.
+
+### Optional phone-to-device LAN handoff
+
+When starting `bash run-termux.sh`, answer **y** to enable LAN transfer.
+The launcher prints the phone's Wi-Fi IPv4 address. Keep the phone and receiving
+device on the same trusted Wi-Fi network. After exporting a theme source ZIP,
+the Package tab shows a token-protected transfer URL; replace `PHONE-IP` with
+the address printed by Termux and open that URL on the receiving device.
+
+LAN mode is off by default. While it is enabled, remote devices can access only
+the tokenized transfer page and that single ZIP download; the editor and its
+other API routes remain blocked to remote clients. Stop the server with
+Ctrl+C when finished. The ZIP is still source material, **not an installable
+PS4 PKG**; copying it to a PS4 does not install a theme. If dependency installation reports a NumPy build error,
 install Termux's packaged NumPy with `pkg install python-numpy`, then retry
 the launcher. Android is a local artwork-editing route; it does not provide
 the Windows-only proprietary PS4 package toolchain.
