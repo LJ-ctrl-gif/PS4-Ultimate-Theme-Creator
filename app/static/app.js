@@ -1398,8 +1398,9 @@ async function exportThemeSource() {
       <p class="card-note">${result.file_count} files included · SHA-256 integrity manifest included.</p>
       <div class="result-rows">${rows}</div>
       <p class="card-note"><code>${result.archive_name}</code></p>
-      <p class="notice notice-warn">Source archive only — not an installable PS4 PKG. Transfer it to an authorized packaging environment.</p>
-      <a class="dl-btn" style="margin-top:14px" href="${result.download}" download>Download theme source ZIP</a>`;
+      <p class="notice notice-warn">Source archive only — not an installable PS4 PKG. The PS4 cannot install this ZIP directly.</p>
+      <a class="dl-btn" style="margin-top:14px" href="${result.download}" download>Download theme source ZIP</a>
+      ${result.transfer_path ? `<div class="transfer-share"><b>Optional LAN transfer</b><p>With LAN transfer enabled in Termux, open this one-file link on another device connected to the same trusted Wi-Fi. Replace PHONE-IP with the IPv4 address printed by Termux.</p><code>http://PHONE-IP:${location.port || "8000"}${result.transfer_path}</code><p class="card-note">This link only exposes this ZIP. Other editor/API routes remain blocked to LAN devices.</p></div>` : `<p class="card-note">For LAN transfer, restart the Termux launcher and enable its optional LAN transfer mode.</p>`}`;
     toast("Theme source ZIP created.", "ok");
   } catch (err) {
     toast(err.message);
