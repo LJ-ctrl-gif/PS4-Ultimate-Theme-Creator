@@ -46,7 +46,7 @@ case "$answer" in
     echo "LAN transfer is ON. Keep this link private and use a trusted Wi-Fi network."
     if command -v ip >/dev/null 2>&1; then
       echo "Phone IPv4 address(es):"
-      ip -o -4 addr show scope global | awk '{sub(/\/.*/, "", $4); print "  http://" $4 ":'"\${PORT:-8000}"'"}'
+      ip -o -4 addr show scope global | awk '{sub(/\/.*/, "", $4); print "  http://" $4 ":'"${PORT:-8000}"'"}'
     else
       echo "Find your phone's Wi-Fi IPv4 address in Android network settings."
     fi
@@ -58,10 +58,10 @@ esac
 
 echo
 echo "BLACK VOID / PS4 Theme Creator"
-echo "On this phone open http://127.0.0.1:\${PORT:-8000}"
+echo "On this phone open http://127.0.0.1:${PORT:-8000}"
 echo "Keep Termux open while using the app. Press Ctrl+C to stop."
 echo
 if [ -n "$LAN_TOKEN" ]; then
-  exec env BLACK_VOID_LAN_TOKEN="$LAN_TOKEN" python -m uvicorn app.main:app --host "$HOST" --port "\${PORT:-8000}"
+  exec env BLACK_VOID_LAN_TOKEN="$LAN_TOKEN" python -m uvicorn app.main:app --host "$HOST" --port "${PORT:-8000}"
 fi
-exec python -m uvicorn app.main:app --host "$HOST" --port "\${PORT:-8000}"
+exec python -m uvicorn app.main:app --host "$HOST" --port "${PORT:-8000}"
