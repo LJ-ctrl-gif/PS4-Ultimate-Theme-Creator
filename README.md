@@ -127,6 +127,18 @@ you don't upload keep the system ones.
 
 ![Icons tab](docs/02-icons.png)
 
+## Mock PKG test mode
+
+The Package tab also includes **Run Mock PKG Test** for browser and phone
+development when the real packaging executables are unavailable. It runs the
+normal theme source assembly, checks the generated asset inventory and
+integrity manifest, and reports the packaging stages as simulated.
+
+Mock mode is a development check only. It deliberately does **not** create a
+fake .pkg, a bootable package, or a file that can be installed on a PS4.
+The real **Build PKG** action remains gated by the required authorized
+packaging toolchain.
+
 ## Theme source ZIP export
 
 The Package tab includes **Export theme source ZIP**. It assembles the selected
