@@ -1453,6 +1453,49 @@ async function packageBuild() {
   }
 }
 
+async function mockPackageBuild() {
+  const btn = $("pkg-mock-build");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Running simulation…";
+  $("pkg-result").hidden = true;
+  try {
+    // Reuse the real source assembler so the mock checks actual uploaded assets.
+    const result = await api("/api/theme-source/export", {
+      method: "POST", body: themeFormData(),
+    });
+    const checks = [
+      ["Theme assets assembled", "PASS"],
+      ["Source file inventory created", "PASS"],
+      ["SHA-256 integrity manifest", "PASS"],
+      ["Fake PKG toolchain", "SIMULATED"],
+      ["Binary .pkg generation", "SKIPPED"],
+    ];
+    const rows = result.included.map((item) =>
+      `<div class="result-row"><span>${item.asset}</span><b>${fmtBytes(item.bytes)}</b></div>`
+    ).join("");
+    const checkRows = checks.map(([label, status]) =>
+      `<div class="result-row"><span>${label}</span><b>${status}</b></div>`
+    ).join("");
+    $("pkg-result").hidden = false;
+    $("pkg-result").innerHTML = `
+      <h2 class="card-title">Mock PKG test completed · simulation only</h2>
+      <p class="notice notice-ok">Asset assembly and integrity checks passed. No PS4 PKG was generated.</p>
+      <div class="result-rows">${checkRows}</div>
+      <h3 class="card-title">Assembled assets · ${result.file_count} files</h3>
+      <div class="result-rows">${rows}</div>
+      <p class="card-note"><code>${result.archive_name}</code> · ${fmtBytes(result.archive_bytes)}</p>
+      <a class="dl-btn" style="margin-top:14px" href="${result.download}" download>Download source ZIP (not installable)</a>
+      <p class="card-note">The mock tool stages are labels for testing only. A real build still needs the supported PS4 packaging toolchain.</p>`;
+    toast("Mock PKG test passed. No PKG was created.", "ok");
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
 async function bootPackage() {
   let d;
   try {
@@ -1515,6 +1558,7 @@ async function bootPackage() {
   $("pkg-title-id").addEventListener("input", syncContentId);
   $("pkg-content-id").addEventListener("input", () => { pkg.contentIdTouched = true; });
   $("pkg-build").addEventListener("click", packageBuild);
+  $("pkg-mock-build").addEventListener("click", mockPackageBuild);
   $("theme-source-export").addEventListener("click", exportThemeSource);
 }
 
