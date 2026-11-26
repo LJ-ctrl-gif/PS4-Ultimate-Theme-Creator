@@ -1558,8 +1558,6 @@ async function bootPackage() {
   $("pkg-title-id").addEventListener("input", syncContentId);
   $("pkg-content-id").addEventListener("input", () => { pkg.contentIdTouched = true; });
   $("pkg-build").addEventListener("click", packageBuild);
-  $("pkg-mock-build").addEventListener("click", mockPackageBuild);
-  $("theme-source-export").addEventListener("click", exportThemeSource);
 }
 
 
@@ -1671,6 +1669,11 @@ async function boot() {
 }
 
 /* ------------------------------------------------------------ listeners */
+
+// These source-only actions must remain available even when the real PKG
+// toolchain/defaults endpoint is unavailable.
+$("pkg-mock-build").addEventListener("click", mockPackageBuild);
+$("theme-source-export").addEventListener("click", exportThemeSource);
 
 wireDropzone("anim-drop", "anim-file", animatedUpload);
 
