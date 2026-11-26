@@ -36,7 +36,7 @@ class MockPackageUiTests(unittest.TestCase):
     def test_real_package_result_escapes_server_values(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         start = js.index("async function packageBuild()")
-        end = js.index("\\nasync function mockPackageBuild()", start)
+        end = js.index("\nasync function mockPackageBuild()", start)
         build = js[start:end]
         self.assertIn("escapeHtml(i.asset)", build)
         self.assertIn("escapeHtml(s.label)", build)
