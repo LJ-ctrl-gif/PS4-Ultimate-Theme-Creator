@@ -17,6 +17,12 @@ let sys = null;
 
 /* ------------------------------------------------------------------ util */
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"\']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;",
+  })[char]);
+}
+
 function fmtBytes(n) {
   if (n == null) return "—";
   if (n < 1024) return `${n} B`;
@@ -1390,7 +1396,7 @@ async function exportThemeSource() {
       method: "POST", body: themeFormData(),
     });
     const rows = result.included.map((item) =>
-      `<div class="result-row"><span>${item.asset}</span><b>${fmtBytes(item.bytes)}</b></div>`
+      `<div class="result-row"><span>${escapeHtml(item.asset)}</span><b>${fmtBytes(item.bytes)}</b></div>`
     ).join("");
     $("pkg-result").hidden = false;
     $("pkg-result").innerHTML = `
@@ -1399,8 +1405,8 @@ async function exportThemeSource() {
       <div class="result-rows">${rows}</div>
       <p class="card-note"><code>${result.archive_name}</code></p>
       <p class="notice notice-warn">Source archive only — not an installable PS4 PKG. The PS4 cannot install this ZIP directly.</p>
-      <a class="dl-btn" style="margin-top:14px" href="${result.download}" download>Download theme source ZIP</a>
-      ${result.transfer_path ? `<div class="transfer-share"><b>Optional LAN transfer</b><p>With LAN transfer enabled in Termux, open this one-file link on another device connected to the same trusted Wi-Fi. Replace PHONE-IP with the IPv4 address printed by Termux.</p><code>http://PHONE-IP:${location.port || "8000"}${result.transfer_path}</code><p class="card-note">This link only exposes this ZIP. Other editor/API routes remain blocked to LAN devices.</p></div>` : `<p class="card-note">For LAN transfer, restart the Termux launcher and enable its optional LAN transfer mode.</p>`}`;
+      <a class="dl-btn" style="margin-top:14px" href="${escapeHtml(result.download)}" download>Download theme source ZIP</a>
+      ${result.transfer_path ? `<div class="transfer-share"><b>Optional LAN transfer</b><p>With LAN transfer enabled in Termux, open this one-file link on another device connected to the same trusted Wi-Fi. Replace PHONE-IP with the IPv4 address printed by Termux.</p><code>http://PHONE-IP:${location.port || "8000"}${escapeHtml(result.transfer_path)}</code><p class="card-note">This link only exposes this ZIP. Other editor/API routes remain blocked to LAN devices.</p></div>` : `<p class="card-note">For LAN transfer, restart the Termux launcher and enable its optional LAN transfer mode.</p>`}`;
     toast("Theme source ZIP created.", "ok");
   } catch (err) {
     toast(err.message);
@@ -1485,7 +1491,7 @@ async function mockPackageBuild() {
       <h3 class="card-title">Assembled assets · ${result.file_count} files</h3>
       <div class="result-rows">${rows}</div>
       <p class="card-note"><code>${result.archive_name}</code> · ${fmtBytes(result.archive_bytes)}</p>
-      <a class="dl-btn" style="margin-top:14px" href="${result.download}" download>Download source ZIP (not installable)</a>
+      <a class="dl-btn" style="margin-top:14px" href="${escapeHtml(result.download)}" download>Download source ZIP (not installable)</a>
       <p class="card-note">The mock tool stages are labels for testing only. A real build still needs the supported PS4 packaging toolchain.</p>`;
     toast("Mock PKG test passed. No PKG was created.", "ok");
   } catch (err) {
