@@ -45,6 +45,23 @@ class MockPackageUiTests(unittest.TestCase):
         self.assertIn("escapeHtml(r.pkg_name)", build)
         self.assertIn("href=\"${escapeHtml(r.download)}\"", build)
 
+    def test_catalogue_and_backend_values_are_escaped(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        self.assertIn("const lblHtml = (x) => escapeHtml(lbl(x))", js)
+        start = js.index("function slotCard(spec)")
+        end = js.index("\\nfunction pintarSlots()", start)
+        slot = js[start:end]
+        self.assertIn("lblHtml(spec.label)", slot)
+        self.assertIn("escapeHtml(spec.fallback)", slot)
+        self.assertIn("escapeHtml(spec.file)", slot)
+        colors_start = js.index("function pintarColoresDelSistema()")
+        colors_end = js.index("\\n/** <input type=color>", colors_start)
+        colors = js[colors_start:colors_end]
+        self.assertIn("escapeHtml(c.value)", colors)
+        self.assertIn("lblHtml(c.label)", colors)
+        self.assertIn('escapeHtml(sys.default_backend)', js)
+        self.assertIn('escapeHtml(b)', js)
+
     def test_mock_failure_is_shown_inline_and_as_text(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         start = js.index("async function mockPackageBuild()")
