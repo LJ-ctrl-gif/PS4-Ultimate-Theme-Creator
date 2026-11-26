@@ -1403,7 +1403,7 @@ async function exportThemeSource() {
       <h2 class="card-title">Theme source export ready · ${fmtBytes(result.archive_bytes)}</h2>
       <p class="card-note">${result.file_count} files included · SHA-256 integrity manifest included.</p>
       <div class="result-rows">${rows}</div>
-      <p class="card-note"><code>${result.archive_name}</code></p>
+      <p class="card-note"><code>${escapeHtml(result.archive_name)}</code></p>
       <p class="notice notice-warn">Source archive only — not an installable PS4 PKG. The PS4 cannot install this ZIP directly.</p>
       <a class="dl-btn" style="margin-top:14px" href="${escapeHtml(result.download)}" download>Download theme source ZIP</a>
       ${result.transfer_path ? `<div class="transfer-share"><b>Optional LAN transfer</b><p>With LAN transfer enabled in Termux, open this one-file link on another device connected to the same trusted Wi-Fi. Replace PHONE-IP with the IPv4 address printed by Termux.</p><code>http://PHONE-IP:${location.port || "8000"}${escapeHtml(result.transfer_path)}</code><p class="card-note">This link only exposes this ZIP. Other editor/API routes remain blocked to LAN devices.</p></div>` : `<p class="card-note">For LAN transfer, restart the Termux launcher and enable its optional LAN transfer mode.</p>`}`;
@@ -1478,7 +1478,7 @@ async function mockPackageBuild() {
       ["Binary .pkg generation", "SKIPPED"],
     ];
     const rows = result.included.map((item) =>
-      `<div class="result-row"><span>${item.asset}</span><b>${fmtBytes(item.bytes)}</b></div>`
+      `<div class="result-row"><span>${escapeHtml(item.asset)}</span><b>${fmtBytes(item.bytes)}</b></div>`
     ).join("");
     const checkRows = checks.map(([label, status]) =>
       `<div class="result-row"><span>${label}</span><b>${status}</b></div>`
@@ -1490,7 +1490,7 @@ async function mockPackageBuild() {
       <div class="result-rows">${checkRows}</div>
       <h3 class="card-title">Assembled assets · ${result.file_count} files</h3>
       <div class="result-rows">${rows}</div>
-      <p class="card-note"><code>${result.archive_name}</code> · ${fmtBytes(result.archive_bytes)}</p>
+      <p class="card-note"><code>${escapeHtml(result.archive_name)}</code> · ${fmtBytes(result.archive_bytes)}</p>
       <a class="dl-btn" style="margin-top:14px" href="${escapeHtml(result.download)}" download>Download source ZIP (not installable)</a>
       <p class="card-note">The mock tool stages are labels for testing only. A real build still needs the supported PS4 packaging toolchain.</p>`;
     toast("Mock PKG test passed. No PKG was created.", "ok");
