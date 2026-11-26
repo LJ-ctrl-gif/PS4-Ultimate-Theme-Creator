@@ -1433,13 +1433,13 @@ async function packageBuild() {
   try {
     const r = await api("/api/package/build", { method: "POST", body: fd });
     const rows = r.included
-      .map((i) => `<div class="result-row"><span>${i.asset}</span><b>${fmtBytes(i.bytes)}</b></div>`)
+      .map((i) => `<div class="result-row"><span>${escapeHtml(i.asset)}</span><b>${fmtBytes(i.bytes)}</b></div>`)
       .join("");
     // The subcommand says more than the exe name, which repeats every time.
     const steps = r.log
       .map((s) => {
         const parts = s.cmd.split(" ");
-        return `<div class="log-step"><b>${s.label}</b><span>${parts[1] || parts[0]}</span><span class="secs">${s.seconds}s</span></div>`;
+        return `<div class="log-step"><b>${escapeHtml(s.label)}</b><span>${escapeHtml(parts[1] || parts[0])}</span><span class="secs">${escapeHtml(s.seconds)}s</span></div>`;
       })
       .join("");
     $("pkg-result").hidden = false;
@@ -1447,8 +1447,8 @@ async function packageBuild() {
       <h2 class="card-title">${t("pkg.result.ok", { size: fmtBytes(r.pkg_bytes), s: r.elapsed })}</h2>
       <div class="result-rows">${rows}</div>
       <div class="log">${steps}</div>
-      <p class="card-note"><code>${r.pkg_name}</code></p>
-      <a class="dl-btn" style="margin-top:14px" href="${r.download}" download>${t("pkg.download")}</a>`;
+      <p class="card-note"><code>${escapeHtml(r.pkg_name)}</code></p>
+      <a class="dl-btn" style="margin-top:14px" href="${escapeHtml(r.download)}" download>${t("pkg.download")}</a>`;
     toast(t("pkg.result.ok", { size: fmtBytes(r.pkg_bytes), s: r.elapsed }), "ok");
   } catch (err) {
     toast(err.message);
