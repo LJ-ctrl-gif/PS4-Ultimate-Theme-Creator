@@ -9,6 +9,7 @@ const $ = (id) => document.getElementById(id);
 /** A label coming from the backend: arrives as {en, es} and is picked by
  *  language. A plain string also works, in case a field is left untranslated. */
 const lbl = (x) => (typeof x === "string" ? x : (x?.[lang()] ?? x?.en ?? ""));
+const lblHtml = (x) => escapeHtml(lbl(x));
 
 /* The <case> `wait` is in SECONDS and takes decimals. Confirmed by reading a
  * real theme's scene: it uses 0.06 (~16 fps) for the rain. */
@@ -463,8 +464,8 @@ async function animatedExport() {
       <div class="result-rows">
         <div class="result-row"><span>.dds totales</span><b>${fmtBytes(r.dds_bytes)}</b></div>
         <div class="result-row"><span>zip</span><b>${fmtBytes(r.zip_bytes)}</b></div>
-        <div class="result-row"><span>wait</span><b>${r.wait}</b></div>
-        <div class="result-row"><span>encoder</span><b>${r.backend}</b></div>
+        <div class="result-row"><span>wait</span><b>${escapeHtml(r.wait)}</b></div>
+        <div class="result-row"><span>encoder</span><b>${escapeHtml(r.backend)}</b></div>
       </div>
       <pre>${r.index_xml.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]))}</pre>
       <a class="dl-btn" href="${r.download}" download>${t("bg.export")} background.raf.zip</a>`;
@@ -550,13 +551,13 @@ function slotCard(spec) {
   const badge = spec.required
     ? `<span class="slot-badge req">${t("slot.required")}</span>`
     : spec.fallback
-      ? `<span class="slot-badge fb" data-from="${spec.fallback}">${
+      ? `<span class="slot-badge fb" data-from="${escapeHtml(spec.fallback)}">${
           t("slot.copyOf", { from: spec.fallback })}</span>`
       : `<span class="slot-badge">${t("slot.optional")}</span>`;
 
   if (spec.hidden_by_raf) el.dataset.hiddenByRaf = "1";
   // The original subtitle, to restore it when going back to a still image.
-  el.dataset.sub = (spec.file ? `${spec.file}.png · ` : "")
+  el.dataset.sub = (spec.file ? `${escapeHtml(spec.file)}.png · ` : "")
     + spec.size.join("×") + (spec.glow ? " + glow" : "");
 
   el.innerHTML = `
@@ -566,7 +567,7 @@ function slotCard(spec) {
       ${badge}
     </div>
     <div class="slot-meta">
-      <div class="slot-name">${lbl(spec.label)}</div>
+      <div class="slot-name">${lblHtml(spec.label)}</div>
       <div class="slot-sub">${spec.file ? `${spec.file}.png · ` : ""}${spec.size.join("×")}${spec.glow ? ` + glow` : ""}</div>
       <div class="slot-raf-warn">lo tapa el fondo animado</div>
     </div>
@@ -1268,7 +1269,7 @@ function pintarColoresDelSistema() {
   const sel = $("pkg-themecolor");
   const actual = sel.value || String(pkg.defaults.theme_defaults.themecolor);
   sel.innerHTML = pkg.defaults.theme_colors
-    .map((c) => `<option value="${c.value}">${c.value} — ${lbl(c.label)}</option>`)
+    .map((c) => `<option value="${c.value}">${escapeHtml(c.value)} — ${lblHtml(c.label)}</option>`)
     .join("");
   sel.value = actual;
 }
@@ -1625,14 +1626,14 @@ async function boot() {
   $("sysinfo").innerHTML = [
     `<span class="pill ${sys.ffmpeg ? "ok" : "off"}">ffmpeg</span>`,
     `<span class="pill ${sys.magick ? "ok" : "off"}">ImageMagick${sys.magick ? "" : " (no instalado)"}</span>`,
-    `<span class="pill ok">encoder ${sys.default_backend}</span>`,
+    `<span class="pill ok">encoder ${escapeHtml(sys.default_backend)}</span>`,
     `<span class="pill ${sys.pkg_tools ? "ok" : "off"}">pkg tools</span>`,
   ].join("");
 
   // Encoder selector only when there is more than one option.
   const sel = $("anim-backend");
   sel.innerHTML = sys.backends
-    .map((b) => `<option value="${b}"${b === sys.default_backend ? " selected" : ""}>${b}</option>`)
+    .map((b) => `<option value="${escapeHtml(b)}"${b === sys.default_backend ? " selected" : ""}>${escapeHtml(b)}</option>` )
     .join("");
   $("backend-row").hidden = sys.backends.length < 2;
 
