@@ -568,7 +568,7 @@ function slotCard(spec) {
     </div>
     <div class="slot-meta">
       <div class="slot-name">${lblHtml(spec.label)}</div>
-      <div class="slot-sub">${spec.file ? `${spec.file}.png · ` : ""}${spec.size.join("×")}${spec.glow ? ` + glow` : ""}</div>
+      <div class="slot-sub">${spec.file ? `${escapeHtml(spec.file)}.png · ` : ""}${spec.size.join("×")}${spec.glow ? ` + glow` : ""}</div>
       <div class="slot-raf-warn">lo tapa el fondo animado</div>
     </div>
     <input type="file" accept="image/*">`;
@@ -1269,7 +1269,7 @@ function pintarColoresDelSistema() {
   const sel = $("pkg-themecolor");
   const actual = sel.value || String(pkg.defaults.theme_defaults.themecolor);
   sel.innerHTML = pkg.defaults.theme_colors
-    .map((c) => `<option value="${c.value}">${escapeHtml(c.value)} — ${lblHtml(c.label)}</option>`)
+    .map((c) => `<option value="${escapeHtml(c.value)}">${escapeHtml(c.value)} — ${lblHtml(c.label)}</option>`)
     .join("");
   sel.value = actual;
 }
@@ -1592,7 +1592,7 @@ function relocalizarTodo() {
   const resActual = sel.value;
   sel.innerHTML = sys.animated_sizes
     .map((x) => `<option value="${sizeValue(x)}">${
-      t("bg.size.opt", { label: x.label, max: x.max_frames })}</option>`)
+      escapeHtml(t("bg.size.opt", { label: x.label, max: x.max_frames }))}</option>`)
     .join("");
   sel.value = resActual;
 
