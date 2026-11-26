@@ -23,5 +23,17 @@ class MockPackageUiTests(unittest.TestCase):
         self.assertNotIn("pkg-build", mock)
 
 
+    def test_source_actions_are_not_blocked_by_pkg_defaults(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        boot_start = js.index("async function bootPackage()")
+        boot_end = js.index("/* ------------------------------------------------------------------ idioma */", boot_start)
+        boot_package = js[boot_start:boot_end]
+        self.assertNotIn('$("pkg-mock-build").addEventListener', boot_package)
+        self.assertNotIn('$("theme-source-export").addEventListener', boot_package)
+        listener_start = js.index("/* ------------------------------------------------------------ listeners */")
+        self.assertGreater(js.index('$("pkg-mock-build").addEventListener', listener_start), listener_start)
+        self.assertGreater(js.index('$("theme-source-export").addEventListener', listener_start), listener_start)
+
+
 if __name__ == "__main__":
     unittest.main()
