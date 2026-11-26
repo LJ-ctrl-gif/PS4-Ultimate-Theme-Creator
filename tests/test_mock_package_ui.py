@@ -23,6 +23,15 @@ class MockPackageUiTests(unittest.TestCase):
         self.assertNotIn("pkg-build", mock)
 
 
+    def test_source_export_ui_escapes_server_values(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        self.assertIn("function escapeHtml(value)", js)
+        self.assertIn("escapeHtml(item.asset)", js)
+        self.assertIn("escapeHtml(result.archive_name)", js)
+        self.assertIn("escapeHtml(result.download)", js)
+        self.assertIn("escapeHtml(result.transfer_path)", js)
+
+
     def test_mock_failure_is_shown_inline_and_as_text(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         start = js.index("async function mockPackageBuild()")
