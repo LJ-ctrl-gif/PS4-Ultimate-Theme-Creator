@@ -49,13 +49,13 @@ class MockPackageUiTests(unittest.TestCase):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         self.assertIn("const lblHtml = (x) => escapeHtml(lbl(x))", js)
         start = js.index("function slotCard(spec)")
-        end = js.index("\\nfunction pintarSlots()", start)
+        end = js.index("\nfunction pintarSlots()", start)
         slot = js[start:end]
         self.assertIn("lblHtml(spec.label)", slot)
         self.assertIn("escapeHtml(spec.fallback)", slot)
         self.assertIn("escapeHtml(spec.file)", slot)
         colors_start = js.index("function pintarColoresDelSistema()")
-        colors_end = js.index("\\n/** <input type=color>", colors_start)
+        colors_end = js.index("\n/** <input type=color>", colors_start)
         colors = js[colors_start:colors_end]
         self.assertIn("escapeHtml(c.value)", colors)
         self.assertIn("lblHtml(c.label)", colors)
