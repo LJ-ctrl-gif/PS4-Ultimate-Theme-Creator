@@ -23,6 +23,16 @@ class MockPackageUiTests(unittest.TestCase):
         self.assertNotIn("pkg-build", mock)
 
 
+    def test_mock_failure_is_shown_inline_and_as_text(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        start = js.index("async function mockPackageBuild()")
+        end = js.index("\nasync function bootPackage()", start)
+        mock = js[start:end]
+        self.assertIn('panel.replaceChildren()', mock)
+        self.assertIn('detail.setAttribute("role", "alert")', mock)
+        self.assertIn('detail.textContent = `Source assembly failed: ${err.message}`', mock)
+
+
     def test_source_actions_are_not_blocked_by_pkg_defaults(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         boot_start = js.index("async function bootPackage()")
