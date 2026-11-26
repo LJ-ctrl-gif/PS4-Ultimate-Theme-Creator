@@ -32,6 +32,19 @@ class MockPackageUiTests(unittest.TestCase):
         self.assertIn("escapeHtml(result.transfer_path)", js)
 
 
+
+    def test_real_package_result_escapes_server_values(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        start = js.index("async function packageBuild()")
+        end = js.index("\\nasync function mockPackageBuild()", start)
+        build = js[start:end]
+        self.assertIn("escapeHtml(i.asset)", build)
+        self.assertIn("escapeHtml(s.label)", build)
+        self.assertIn("escapeHtml(parts[1] || parts[0])", build)
+        self.assertIn("escapeHtml(s.seconds)", build)
+        self.assertIn("escapeHtml(r.pkg_name)", build)
+        self.assertIn("href=\"${escapeHtml(r.download)}\"", build)
+
     def test_mock_failure_is_shown_inline_and_as_text(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         start = js.index("async function mockPackageBuild()")
