@@ -1489,6 +1489,17 @@ async function mockPackageBuild() {
       <p class="card-note">The mock tool stages are labels for testing only. A real build still needs the supported PS4 packaging toolchain.</p>`;
     toast("Mock PKG test passed. No PKG was created.", "ok");
   } catch (err) {
+    const panel = $("pkg-result");
+    panel.replaceChildren();
+    const heading = document.createElement("h2");
+    heading.className = "card-title";
+    heading.textContent = "Mock PKG test could not complete";
+    const detail = document.createElement("p");
+    detail.className = "notice notice-warn";
+    detail.setAttribute("role", "alert");
+    detail.textContent = `Source assembly failed: ${err.message}`;
+    panel.append(heading, detail);
+    panel.hidden = false;
     toast(err.message);
   } finally {
     btn.disabled = false;
