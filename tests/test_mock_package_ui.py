@@ -9,7 +9,7 @@ class MockPackageUiTests(unittest.TestCase):
     def test_mock_button_is_present_and_disclosed(self):
         html = (ROOT / "app/static/index.html").read_text(encoding="utf-8")
         self.assertIn('id="pkg-mock-build"', html)
-        self.assertIn("does not create an installable PS4 PKG", html)
+        self.assertIn("does not create an installable PKG", html)
 
     def test_mock_assembles_source_and_never_claims_a_pkg(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
