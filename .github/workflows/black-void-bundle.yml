@@ -46,6 +46,8 @@ jobs:
         run: python -m unittest discover -s tests -p test_lan_transfer.py
       - name: Test GoldHEN FTP validation and bounded media downloads
         run: python -m unittest discover -s tests -p test_ps4_ftp.py
+      - name: Test GoldHEN FTP image, audio and video imports
+        run: python -m unittest discover -s tests -p test_ps4_ftp_import.py
       - name: Test PS4 package toolchain preflight
         run: python -m unittest discover -s tests -p test_pkg_toolchain.py
       - name: Test mock PKG UI disclosure and behavior
