@@ -74,5 +74,14 @@ class Ps4FtpUiTests(unittest.TestCase):
         self.assertIn('sfxRow.querySelector(".sfx-clear").hidden = false', js)
 
 
+    def test_mobile_ftp_controls_have_touch_sized_targets(self):
+        css = (ROOT / "app/static/style.css").read_text(encoding="utf-8")
+        self.assertIn("#ps4-ftp-card input", css)
+        self.assertIn("#ps4-ftp-list button", css)
+        self.assertIn("min-height: 44px", css)
+        self.assertIn("font-size: 16px", css)
+        self.assertIn("outline-offset: 3px", css)
+
+
 if __name__ == "__main__":
     unittest.main()
