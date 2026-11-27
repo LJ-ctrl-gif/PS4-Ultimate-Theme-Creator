@@ -42,5 +42,18 @@ class Ps4FtpUiTests(unittest.TestCase):
         self.assertIn("512 MB import limit", ftp)
 
 
+    def test_ps4_video_import_connects_to_dynamic_background_preview(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        main = (ROOT / "app/main.py").read_text(encoding="utf-8")
+        self.assertIn('const isVideo = ["mp4"', js)
+        self.assertIn('value: "video|animated"', js)
+        self.assertIn('api("/api/ps4/ftp/import"', js)
+        self.assertIn('if (kind === "video")', js)
+        self.assertIn("await loadBitmaps(imported.frames)", js)
+        self.assertIn('if kind == "video":', main)
+        self.assertIn('jobs.create("animated", filename, data)', main)
+        self.assertIn("_build_animated_preview(job", main)
+
+
 if __name__ == "__main__":
     unittest.main()
