@@ -1414,8 +1414,10 @@ async function exportThemeSource() {
         ? "" : location.hostname;
       hostInput.value = initialHost;
       const makeTransferUrl = () => {
-        const host = hostInput.value.trim().replace(/^https?:\\/\\//i, "").replace(/\\/$/, "");
-        const validHost = /^[a-zA-Z0-9.:-]+$/.test(host) && !host.includes("..");
+        const rawHost = hostInput.value.trim();
+        const host = rawHost.replace(/^https?:\/\//i, "").split("/")[0].trim();
+        const octets = host.split(".");
+        const validHost = octets.length === 4 && octets.every((part) => /^\d{1,3}$/.test(part) && Number(part) >= 0 && Number(part) <= 255);
         const transferUrl = validHost
           ? "http://" + host + ":" + (location.port || "8000") + result.transfer_path
           : "";
