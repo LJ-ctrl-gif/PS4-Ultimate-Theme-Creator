@@ -997,3 +997,61 @@ input[type=range]:disabled { opacity: .45; cursor: default; }
   display:block; padding:10px; border-radius:8px; overflow-wrap:anywhere;
   background:var(--bg); color:var(--txt); border:1px solid var(--line-soft);
 }
+
+
+/* Mobile-first touch polish: keep every editor control reachable without
+   horizontal page scrolling on phones and narrow embedded browsers. */
+@media (max-width: 720px) {
+  .topbar {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .brand { align-items: flex-start; gap: 10px; min-width: 0; }
+  .brand-mark { width: 32px; height: 32px; border-radius: 8px; }
+  .topbar h1 { font-size: 16px; line-height: 1.35; overflow-wrap: anywhere; }
+  .brand-sub { font-size: 12px; }
+  .byline { display: block; margin: 4px 0 0; padding: 0; border: 0; }
+  .topbar-right { width: 100%; justify-content: space-between; gap: 8px; }
+  .sysinfo { gap: 6px; }
+  .pill { font-size: 11px; padding: 3px 8px; }
+  .tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 0 8px;
+    scrollbar-width: thin;
+  }
+  .tab { flex: 0 0 auto; padding: 12px 13px; font-size: 14px; }
+  main { padding: 16px 12px 36px; }
+  .panel { min-width: 0; }
+  .workspace { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .controls { padding: 16px; gap: 16px; }
+  .dropzone { padding: 54px 14px; }
+  .mode-switch { gap: 8px; }
+  .mode-opt { min-width: 0; }
+  .mode-face { padding: 12px; }
+  .slot-toolbar, .bgm-row { flex-wrap: wrap; gap: 8px; }
+  .slot-toolbar > *, .bgm-row > .btn, .bgm-row > label.btn { max-width: 100%; }
+  .slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .slot-grid-sm { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .card { padding: 14px; }
+  .workspace-library-head { align-items: flex-start; }
+  .workspace-filters { grid-template-columns: minmax(0, 1fr); }
+  .workspace-item { align-items: flex-start; gap: 8px; }
+  .workspace-item-info { overflow-wrap: anywhere; }
+  #ps4-ftp-card .bgm-row { display: grid; grid-template-columns: minmax(0, 1fr); }
+  #ps4-ftp-card .field, #ps4-ftp-card .btn { width: 100%; min-width: 0; }
+  #ps4-ftp-list .workspace-item { flex-direction: column; }
+  #ps4-ftp-list .workspace-item .btn { width: 100%; }
+  .pv-stage { border-radius: 8px; }
+  .transport { gap: 8px; }
+  .timing-read { gap: 6px; font-size: 12px; }
+}
+@media (max-width: 380px) {
+  .slot-grid-sm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tab { padding-inline: 10px; font-size: 13px; }
+  .topbar-right { align-items: flex-start; flex-direction: column; }
+}
