@@ -8,7 +8,7 @@ import posixpath
 MEDIA_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".bmp", ".webp", ".gif", ".dds",
     ".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac", ".opus",
-    ".wma", ".at9", ".vag", ".mp4", ".mov", ".mkv", ".webm",
+    ".wma", ".at9", ".vag", ".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v", ".gif", ".apng", ".wmv", ".flv",
 }
 
 
