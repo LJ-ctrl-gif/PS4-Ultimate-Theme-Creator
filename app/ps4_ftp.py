@@ -4,7 +4,6 @@ from __future__ import annotations
 import ftplib
 import ipaddress
 import posixpath
-import re
 
 MEDIA_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".bmp", ".webp", ".gif", ".dds",
@@ -23,7 +22,7 @@ def validate_target(host: str, port: int, path: str) -> tuple[str, int, str]:
     if port != 2121:
         raise ValueError("GoldHEN FTP uses port 2121.")
     normalized = posixpath.normpath("/" + str(path or "/").lstrip("/"))
-    if "\\x00" in normalized or any(part == ".." for part in str(path).split("/")):
+    if any(ord(char) < 32 or ord(char) == 127 for char in str(path)) or any(part == ".." for part in str(path).split("/")):
         raise ValueError("Invalid PS4 folder path.")
     return str(address), port, normalized
 
@@ -55,7 +54,7 @@ def list_media(host: str, port: int = 2121, path: str = "/", timeout: float = 4.
             if is_dir or ext in MEDIA_EXTENSIONS:
                 entries.append({"name": name, "path": posixpath.join(path, name), "directory": is_dir, "media": ext in MEDIA_EXTENSIONS})
         return {"host": host, "port": port, "path": path, "entries": entries, "read_only": True}
-    except (OSError, ftplib.all_errors) as exc:
+    except ftplib.all_errors as exc:
         raise ValueError("Could not browse GoldHEN FTP. Check the PS4 IP, port 2121, and that FTP is enabled.") from exc
     finally:
         try:
