@@ -769,6 +769,7 @@ function pintarSfxRows() {
   sfx.catalog.filter((x) => x.convert).forEach((spec) => {
     const row = document.createElement("div");
     row.className = "sfx-row";
+    row.dataset.sfxSlot = spec.id;
     row.innerHTML = `
       <span class="sfx-name">${lbl(spec.label)}</span>
       <label class="btn btn-ghost">${t("snd.pick")}<input type="file" accept="audio/*" hidden></label>
@@ -1544,6 +1545,14 @@ async function browsePs4Ftp() {
                 paintBgm(imported);
               } else {
                 sfx.chosen[slotId] = imported.job_id;
+                const sfxRow = Array.from(document.querySelectorAll(".sfx-row"))
+                  .find((candidate) => candidate.dataset.sfxSlot === slotId);
+                if (sfxRow) {
+                  const info = sfxRow.querySelector(".bgm-info");
+                  info.textContent = item.name;
+                  info.className = "bgm-info on";
+                  sfxRow.querySelector(".sfx-clear").hidden = false;
+                }
                 guardarSesion();
               }
               guardarSesion();
