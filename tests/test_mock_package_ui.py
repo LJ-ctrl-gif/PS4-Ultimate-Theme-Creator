@@ -29,7 +29,8 @@ class MockPackageUiTests(unittest.TestCase):
         self.assertIn("escapeHtml(item.asset)", js)
         self.assertIn("escapeHtml(result.archive_name)", js)
         self.assertIn("escapeHtml(result.download)", js)
-        self.assertIn("escapeHtml(result.transfer_path)", js)
+        self.assertIn("+ result.transfer_path", js)
+        self.assertIn('$("theme-transfer-url").textContent = transferUrl', js)
 
 
 
