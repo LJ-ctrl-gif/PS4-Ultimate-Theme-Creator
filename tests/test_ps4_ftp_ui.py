@@ -29,5 +29,18 @@ class Ps4FtpUiTests(unittest.TestCase):
         self.assertNotIn("innerHTML", browser)
 
 
+    def test_browser_offers_import_into_editor_slots(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        main = (ROOT / "app/main.py").read_text(encoding="utf-8")
+        ftp = (ROOT / "app/ps4_ftp.py").read_text(encoding="utf-8")
+        self.assertIn('api("/api/ps4/ftp/import"', js)
+        self.assertIn("Import to editor", js)
+        self.assertIn('slots.chosen[slotId] = imported.job_id', js)
+        self.assertIn('@app.post("/api/ps4/ftp/import")', main)
+        self.assertIn("ps4_ftp.download_media(host, port, path, MAX_UPLOAD_BYTES)", main)
+        self.assertIn("ftp.retrbinary", ftp)
+        self.assertIn("512 MB import limit", ftp)
+
+
 if __name__ == "__main__":
     unittest.main()
