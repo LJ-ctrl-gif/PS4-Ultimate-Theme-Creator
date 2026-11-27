@@ -1409,7 +1409,7 @@ async function exportThemeSource() {
       <a class="dl-btn" style="margin-top:14px" href="${escapeHtml(result.download)}" download>Download theme source ZIP</a>
       ${result.transfer_path ? `<div class="transfer-share"><b>Optional LAN transfer</b><p>Open this exact link on the PS4 browser or another device on the same trusted Wi-Fi. LAN mode must have been enabled when Termux started.</p><code id="theme-transfer-url"></code><button id="theme-transfer-copy" class="btn btn-ghost" type="button">Copy transfer link</button><p class="card-note">This temporary link exposes only this ZIP. The editor and other API routes remain blocked to LAN devices. The ZIP is source material, not an installable PS4 theme package.</p></div>` : `<p class="card-note">For LAN transfer, restart the Termux launcher and enable its optional LAN transfer mode.</p>`}
     if (result.transfer_path) {
-      const transferUrl = `http://${location.hostname}:${location.port || "8000"}${result.transfer_path}`;
+      const transferUrl = "http://" + location.hostname + ":" + (location.port || "8000") + result.transfer_path;
       $("theme-transfer-url").textContent = transferUrl;
       $("theme-transfer-copy").addEventListener("click", async () => {
         try {
