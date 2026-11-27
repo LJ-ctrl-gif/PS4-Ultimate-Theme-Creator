@@ -64,7 +64,7 @@ class Ps4FtpValidationTests(unittest.TestCase):
                 ps4_ftp.validate_target(host, 2121, "/")
 
     def test_rejects_control_characters_in_path(self):
-        for path in ("/user/data\\r\\nRETR /system/etc/passwd", "/user/\\x00image.png", "/user/\\x7f"):
+        for path in ("/user/data\r\nRETR /system/etc/passwd", "/user/\x00image.png", "/user/\x7f"):
             with self.subTest(path=repr(path)), self.assertRaises(ValueError):
                 ps4_ftp.validate_target("192.168.1.23", 2121, path)
 
