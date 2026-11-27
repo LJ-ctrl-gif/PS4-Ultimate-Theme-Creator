@@ -55,5 +55,24 @@ class Ps4FtpUiTests(unittest.TestCase):
         self.assertIn("_build_animated_preview(job", main)
 
 
+    def test_import_validates_destination_before_ftp_download(self):
+        main = (ROOT / "app/main.py").read_text(encoding="utf-8")
+        start = main.index('@app.post("/api/ps4/ftp/import")')
+        end = main.index('@app.get("/api/audio/{job_id}/info")', start)
+        route = main[start:end]
+        self.assertLess(route.index('if kind == "video":'), route.index("ps4_ftp.download_media"))
+        self.assertLess(route.index("if suffix not in allowed:"), route.index("ps4_ftp.download_media"))
+        self.assertIn('slot_id != "animated"', route)
+        self.assertIn("Unknown image slot.", route)
+        self.assertIn("Unknown audio slot.", route)
+
+    def test_sfx_import_updates_the_visible_slot_row(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        self.assertIn("row.dataset.sfxSlot = spec.id", js)
+        self.assertIn('candidate.dataset.sfxSlot === slotId', js)
+        self.assertIn('info.textContent = item.name', js)
+        self.assertIn('sfxRow.querySelector(".sfx-clear").hidden = false', js)
+
+
 if __name__ == "__main__":
     unittest.main()
