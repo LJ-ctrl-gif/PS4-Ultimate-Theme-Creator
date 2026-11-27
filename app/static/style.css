@@ -1055,3 +1055,26 @@ input[type=range]:disabled { opacity: .45; cursor: default; }
   .tab { padding-inline: 10px; font-size: 13px; }
   .topbar-right { align-items: flex-start; flex-direction: column; }
 }
+
+/* Touch accessibility for the PS4 media browser on compact Android screens. */
+@media (max-width: 720px) {
+  #ps4-ftp-card input,
+  #ps4-ftp-card select,
+  #ps4-ftp-card button,
+  #ps4-ftp-list button {
+    min-height: 44px;
+  }
+  #ps4-ftp-card input,
+  #ps4-ftp-card select {
+    font-size: 16px;
+  }
+  #ps4-ftp-card button:focus-visible,
+  #ps4-ftp-list button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  #ps4-ftp-list .workspace-item {
+    padding: 12px;
+    gap: 10px;
+  }
+}
