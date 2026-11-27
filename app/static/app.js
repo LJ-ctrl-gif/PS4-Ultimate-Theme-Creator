@@ -1447,6 +1447,57 @@ async function exportThemeSource() {
   }
 }
 
+async function browsePs4Ftp() {
+  const button = $("ps4-ftp-browse");
+  const status = $("ps4-ftp-status");
+  const list = $("ps4-ftp-list");
+  const form = new FormData();
+  form.append("host", $("ps4-ftp-host").value.trim());
+  form.append("port", "2121");
+  form.append("path", $("ps4-ftp-path").value.trim() || "/");
+  button.disabled = true;
+  status.textContent = "Connecting to GoldHEN FTP…";
+  list.replaceChildren();
+  try {
+    const result = await api("/api/ps4/ftp/list", { method: "POST", body: form });
+    $("ps4-ftp-path").value = result.path;
+    status.textContent = result.entries.length + " folders/media files · read-only";
+    if (!result.entries.length) {
+      list.textContent = "No folders or supported media files found here.";
+      return;
+    }
+    result.entries.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "workspace-item";
+      const name = document.createElement("span");
+      name.textContent = (item.directory ? "📁 " : "♫ ") + item.name;
+      row.append(name);
+      if (item.directory) {
+        const open = document.createElement("button");
+        open.type = "button";
+        open.className = "btn btn-ghost";
+        open.textContent = "Open folder";
+        open.addEventListener("click", () => {
+          $("ps4-ftp-path").value = item.path;
+          browsePs4Ftp();
+        });
+        row.append(open);
+      } else {
+        const kind = document.createElement("span");
+        kind.className = "card-note";
+        kind.textContent = "Media found";
+        row.append(kind);
+      }
+      list.append(row);
+    });
+  } catch (err) {
+    status.textContent = "FTP connection failed";
+    list.textContent = err.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function packageBuild() {
   const btn = $("pkg-build");
   const original = btn.textContent;
@@ -1758,6 +1809,7 @@ $("anim-scrub").addEventListener("input", (e) => {
 $("anim-export").addEventListener("click", animatedExport);
 $("anim-reset").addEventListener("click", resetAnimated);
 
+$("ps4-ftp-browse").addEventListener("click", browsePs4Ftp);
 $("workspace-refresh").addEventListener("click", refreshWorkspace);
 $("workspace-search").addEventListener("input", renderWorkspace);
 $("workspace-kind-filter").addEventListener("change", renderWorkspace);
