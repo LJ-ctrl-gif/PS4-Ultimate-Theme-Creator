@@ -314,6 +314,19 @@
         </label>
       </div>
     </div>
+    <div class="card" id="ps4-ftp-card">
+      <h2 class="card-title">PS4 media browser (GoldHEN FTP)</h2>
+      <p class="card-note">Read-only browser for your PS4 over the same private Wi-Fi network. GoldHEN FTP must be enabled on the console.</p>
+      <div class="bgm-row">
+        <label class="ctl-head" for="ps4-ftp-host">PS4 IP</label>
+        <input id="ps4-ftp-host" class="field mono" value="192.168.1.23" inputmode="decimal" placeholder="192.168.1.23">
+        <label class="ctl-head" for="ps4-ftp-path">Folder</label>
+        <input id="ps4-ftp-path" class="field mono" value="/" placeholder="/">
+        <button id="ps4-ftp-browse" class="btn btn-ghost" type="button">Browse</button>
+      </div>
+      <p id="ps4-ftp-status" class="card-note" aria-live="polite">Port 2121 · Read-only · Private IPv4 only</p>
+      <div id="ps4-ftp-list" class="workspace-list" aria-live="polite"><p class="card-note">Enter a PS4 folder and tap Browse.</p></div>
+    </div>
     <div class="card workspace-library">
       <div class="workspace-library-head">
         <div>
