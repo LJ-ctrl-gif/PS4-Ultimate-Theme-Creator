@@ -750,6 +750,13 @@ def ps4_ftp_import(
         raise HTTPException(422, str(exc)) from exc
 
     suffix = Path(filename).suffix.lower()
+    if kind == "video":
+        if suffix not in VIDEO_EXTS:
+            raise HTTPException(415, "Choose a supported video or animated image.")
+        job = jobs.create("animated", filename, data)
+        size = _parse_size("")
+        return _build_animated_preview(job, _clamp_frames(12, size), size)
+
     if kind == "image":
         spec = IMAGE_SLOTS.get(slot_id)
         if spec is None:
