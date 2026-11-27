@@ -1459,9 +1459,13 @@ async function browsePs4Ftp() {
   status.textContent = "Connecting to GoldHEN FTP…";
   list.replaceChildren();
   try {
-    const result = await api("/api/ps4/ftp/list", { method: "POST", body: form });
+    const [result, imageCatalog, audioCatalog] = await Promise.all([
+      api("/api/ps4/ftp/list", { method: "POST", body: form }),
+      api("/api/slots"),
+      api("/api/audio/slots"),
+    ]);
     $("ps4-ftp-path").value = result.path;
-    status.textContent = result.entries.length + " folders/media files · read-only";
+    status.textContent = result.entries.length + " folders/media files · read-only on PS4";
     if (!result.entries.length) {
       list.textContent = "No folders or supported media files found here.";
       return;
@@ -1483,10 +1487,65 @@ async function browsePs4Ftp() {
         });
         row.append(open);
       } else {
-        const kind = document.createElement("span");
-        kind.className = "card-note";
-        kind.textContent = "Media found";
-        row.append(kind);
+        const ext = item.name.split(".").pop().toLowerCase();
+        const isImage = ["png,jpg,jpeg,bmp,webp,gif,dds"].includes(ext);
+        const isAudio = ["mp3,wav,ogg,flac,m4a,aac,opus,wma,at9,vag"].includes(ext);
+        if (!isImage && !isAudio) {
+          const kind = document.createElement("span");
+          kind.className = "card-note";
+          kind.textContent = "Browse only — this file cannot be assigned to an image/audio slot";
+          row.append(kind);
+        } else {
+          const target = document.createElement("select");
+          target.className = "select";
+          target.setAttribute("aria-label", "Import destination for " + item.name);
+          const slots = isImage
+            ? imageCatalog.slots.map((slot) => ({ value: "image|" + slot.id, label: "Image · " + slot.label }))
+            : audioCatalog.slots.map((slot) => ({ value: "audio|" + slot.id, label: "Sound · " + slot.label }));
+          slots.forEach((slot) => {
+            const option = document.createElement("option");
+            option.value = slot.value;
+            option.textContent = slot.label;
+            target.append(option);
+          });
+          const importButton = document.createElement("button");
+          importButton.type = "button";
+          importButton.className = "btn btn-primary";
+          importButton.textContent = "Import to editor";
+          importButton.addEventListener("click", async () => {
+            const [kind, slotId] = target.value.split("|");
+            const fd = new FormData();
+            fd.append("host", $("ps4-ftp-host").value.trim());
+            fd.append("port", "2121");
+            fd.append("path", item.path);
+            fd.append("kind", kind);
+            fd.append("slot_id", slotId);
+            fd.append("gain_db", "0");
+            importButton.disabled = true;
+            importButton.textContent = "Importing…";
+            try {
+              const imported = await api("/api/ps4/ftp/import", { method: "POST", body: fd });
+              if (kind === "image") {
+                slots.chosen[slotId] = imported.job_id;
+                paintSlot(slotId, imported.preview);
+              } else if (slotId === "bgm") {
+                paintBgm(imported);
+              } else {
+                sfx.chosen[slotId] = imported.job_id;
+                guardarSesion();
+              }
+              guardarSesion();
+              importButton.textContent = "Imported";
+              status.textContent = "Imported " + item.name + " into " + slotId + ". PS4 source remains unchanged.";
+              toast("PS4 media imported into the editor.", "ok");
+            } catch (err) {
+              importButton.disabled = false;
+              importButton.textContent = "Import to editor";
+              toast(err.message);
+            }
+          });
+          row.append(target, importButton);
+        }
       }
       list.append(row);
     });
