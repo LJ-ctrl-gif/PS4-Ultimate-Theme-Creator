@@ -41,6 +41,10 @@ class MockPackageUiTests(unittest.TestCase):
         export = js[start:end]
         self.assertIn('id="theme-transfer-url"', export)
         self.assertIn('id="theme-transfer-copy"', export)
+        self.assertIn('id="theme-transfer-host"', export)
+        self.assertIn('location.hostname === "localhost"', export)
+        self.assertIn('hostInput.addEventListener("input", makeTransferUrl)', export)
+        self.assertIn('$("theme-transfer-copy").disabled = !transferUrl', export)
         self.assertIn('location.hostname', export)
         self.assertIn('navigator.clipboard.writeText(transferUrl)', export)
         self.assertIn('$("theme-transfer-url").textContent = transferUrl', export)
