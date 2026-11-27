@@ -1490,7 +1490,8 @@ async function browsePs4Ftp() {
         const ext = item.name.split(".").pop().toLowerCase();
         const isImage = ["png","jpg","jpeg","bmp","webp","gif","dds"].includes(ext);
         const isAudio = ["mp3","wav","ogg","flac","m4a","aac","opus","wma","at9","vag"].includes(ext);
-        if (!isImage && !isAudio) {
+        const isVideo = ["mp4","mov","mkv","webm","avi","m4v","gif","apng","wmv","flv"].includes(ext);
+        if (!isImage && !isAudio && !isVideo) {
           const kind = document.createElement("span");
           kind.className = "card-note";
           kind.textContent = "Browse only — this file cannot be assigned to an image/audio slot";
@@ -1499,9 +1500,11 @@ async function browsePs4Ftp() {
           const target = document.createElement("select");
           target.className = "select";
           target.setAttribute("aria-label", "Import destination for " + item.name);
-          const targetOptions = isImage
-            ? imageCatalog.slots.map((slot) => ({ value: "image|" + slot.id, label: "Image · " + slot.label }))
-            : audioCatalog.slots.map((slot) => ({ value: "audio|" + slot.id, label: "Sound · " + slot.label }));
+          const targetOptions = isVideo
+            ? [{ value: "video|animated", label: "Dynamic background · RAF preview" }]
+            : isImage
+              ? imageCatalog.slots.map((slot) => ({ value: "image|" + slot.id, label: "Image · " + slot.label }))
+              : audioCatalog.slots.map((slot) => ({ value: "audio|" + slot.id, label: "Sound · " + slot.label }));
           targetOptions.forEach((slot) => {
             const option = document.createElement("option");
             option.value = slot.value;
@@ -1525,7 +1528,18 @@ async function browsePs4Ftp() {
             importButton.textContent = "Importing…";
             try {
               const imported = await api("/api/ps4/ftp/import", { method: "POST", body: fd });
-              if (kind === "image") {
+              if (kind === "video") {
+                $("bgmode-animated").checked = true;
+                $("bgmode-static").checked = false;
+                $("bg-animated").hidden = false;
+                $("bg-static").hidden = true;
+                $("anim-drop").hidden = true;
+                $("anim-workspace").hidden = false;
+                $("anim-result").hidden = true;
+                await loadBitmaps(imported.frames);
+                applyAnimatedPayload(imported);
+                player.start();
+              } else if (kind === "image") {
                 slots.chosen[slotId] = imported.job_id;
                 paintSlot(slotId, imported.preview);
               } else if (slotId === "bgm") {
