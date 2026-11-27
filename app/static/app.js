@@ -1488,8 +1488,8 @@ async function browsePs4Ftp() {
         row.append(open);
       } else {
         const ext = item.name.split(".").pop().toLowerCase();
-        const isImage = ["png,jpg,jpeg,bmp,webp,gif,dds"].includes(ext);
-        const isAudio = ["mp3,wav,ogg,flac,m4a,aac,opus,wma,at9,vag"].includes(ext);
+        const isImage = ["png","jpg","jpeg","bmp","webp","gif","dds"].includes(ext);
+        const isAudio = ["mp3","wav","ogg","flac","m4a","aac","opus","wma","at9","vag"].includes(ext);
         if (!isImage && !isAudio) {
           const kind = document.createElement("span");
           kind.className = "card-note";
@@ -1499,10 +1499,10 @@ async function browsePs4Ftp() {
           const target = document.createElement("select");
           target.className = "select";
           target.setAttribute("aria-label", "Import destination for " + item.name);
-          const slots = isImage
+          const targetOptions = isImage
             ? imageCatalog.slots.map((slot) => ({ value: "image|" + slot.id, label: "Image · " + slot.label }))
             : audioCatalog.slots.map((slot) => ({ value: "audio|" + slot.id, label: "Sound · " + slot.label }));
-          slots.forEach((slot) => {
+          targetOptions.forEach((slot) => {
             const option = document.createElement("option");
             option.value = slot.value;
             option.textContent = slot.label;
