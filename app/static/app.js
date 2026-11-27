@@ -1475,7 +1475,7 @@ async function browsePs4Ftp() {
       const row = document.createElement("div");
       row.className = "workspace-item";
       const name = document.createElement("span");
-      name.textContent = (item.directory ? "📁 " : "♫ ") + item.name;
+      name.textContent = (item.directory ? "📁 " : "• ") + item.name;
       row.append(name);
       if (item.directory) {
         const open = document.createElement("button");
@@ -1495,7 +1495,7 @@ async function browsePs4Ftp() {
         if (!isImage && !isAudio && !isVideo) {
           const kind = document.createElement("span");
           kind.className = "card-note";
-          kind.textContent = "Browse only — this file cannot be assigned to an image/audio slot";
+          kind.textContent = "Browse only — this file type cannot be imported into the editor";
           row.append(kind);
         } else {
           const target = document.createElement("select");
