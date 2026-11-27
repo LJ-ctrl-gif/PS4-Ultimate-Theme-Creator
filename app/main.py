@@ -24,7 +24,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import at9, jobs, mdx, media, pkg, raf, theme, theme_xml, vag
+from . import at9, jobs, mdx, media, pkg, ps4_ftp, raf, theme, theme_xml, vag
 from .config import (
     ANIMATED_FRAME_BYTES,
     ANIMATED_SIZE,
@@ -170,6 +170,19 @@ def _budget(frame_count: int, size: tuple[int, int] = ANIMATED_SIZE) -> dict:
 
 
 # --- System info ----------------------------------------------------------
+
+@app.post("/api/ps4/ftp/list")
+def ps4_ftp_list(
+    host: str = Form(...),
+    port: int = Form(2121),
+    path: str = Form("/"),
+) -> dict:
+    """List folders and common media files from a GoldHEN FTP server; read-only."""
+    try:
+        return ps4_ftp.list_media(host, port, path)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
 
 @app.get("/api/workspace")
 def workspace_list() -> dict:
