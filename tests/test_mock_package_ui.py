@@ -50,6 +50,17 @@ class MockPackageUiTests(unittest.TestCase):
         self.assertIn('$("theme-transfer-url").textContent = transferUrl', export)
         self.assertIn("temporary link exposes only this ZIP", export)
 
+    def test_lan_host_validation_requires_valid_ipv4_octets(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        start = js.index("const makeTransferUrl = () =>")
+        end = js.index("hostInput.addEventListener", start)
+        validation = js[start:end]
+        self.assertIn('const octets = host.split(".")', validation)
+        self.assertIn('octets.length === 4', validation)
+        self.assertIn(r'/^\\d{1,3}$/', validation)
+        self.assertIn('Number(part) <= 255', validation)
+        self.assertIn('const transferUrl = validHost', validation)
+
     def test_real_package_result_escapes_server_values(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         start = js.index("async function packageBuild()")
