@@ -57,7 +57,7 @@ class MockPackageUiTests(unittest.TestCase):
         validation = js[start:end]
         self.assertIn('const octets = host.split(".")', validation)
         self.assertIn('octets.length === 4', validation)
-        self.assertIn(r'/^\\d{1,3}$/', validation)
+        self.assertIn(r'/^\d{1,3}$/', validation)
         self.assertIn('Number(part) <= 255', validation)
         self.assertIn('const transferUrl = validHost', validation)
 
