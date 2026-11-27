@@ -58,5 +58,49 @@ class Ps4FtpValidationTests(unittest.TestCase):
         self.assertEqual(fake.command, "RETR /user/data/photo.png")
 
 
+    def test_rejects_loopback_link_local_and_ipv6(self):
+        for host in ("127.0.0.1", "169.254.1.2", "::1"):
+            with self.subTest(host=host), self.assertRaises(ValueError):
+                ps4_ftp.validate_target(host, 2121, "/")
+
+    def test_rejects_control_characters_in_path(self):
+        for path in ("/user/data\\r\\nRETR /system/etc/passwd", "/user/\\x00image.png", "/user/\\x7f"):
+            with self.subTest(path=repr(path)), self.assertRaises(ValueError):
+                ps4_ftp.validate_target("192.168.1.23", 2121, path)
+
+    def test_rejects_empty_or_directory_download(self):
+        with patch("app.ps4_ftp.ftplib.FTP") as ftp:
+            for path in ("/", "/user/data/"):
+                with self.subTest(path=path), self.assertRaises(ValueError):
+                    ps4_ftp.download_media("192.168.1.23", 2121, path)
+            ftp.assert_not_called()
+
+    def test_download_accepts_file_exactly_at_size_limit(self):
+        class FakeFtp:
+            def connect(self, *args, **kwargs): pass
+            def login(self): pass
+            def retrbinary(self, command, callback, blocksize=8192):
+                callback(b"1234")
+            def quit(self): pass
+
+        with patch("app.ps4_ftp.ftplib.FTP", return_value=FakeFtp()):
+            name, data = ps4_ftp.download_media(
+                "192.168.1.23", 2121, "/user/data/photo.png", max_bytes=4
+            )
+        self.assertEqual(name, "photo.png")
+        self.assertEqual(data, b"1234")
+
+    def test_download_rejects_empty_remote_file(self):
+        class FakeFtp:
+            def connect(self, *args, **kwargs): pass
+            def login(self): pass
+            def retrbinary(self, command, callback, blocksize=8192): pass
+            def quit(self): pass
+
+        with patch("app.ps4_ftp.ftplib.FTP", return_value=FakeFtp()):
+            with self.assertRaisesRegex(ValueError, "empty"):
+                ps4_ftp.download_media("192.168.1.23", 2121, "/user/data/empty.png")
+
+
 if __name__ == "__main__":
     unittest.main()
