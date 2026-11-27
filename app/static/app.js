@@ -1890,6 +1890,19 @@ $("anim-export").addEventListener("click", animatedExport);
 $("anim-reset").addEventListener("click", resetAnimated);
 
 $("ps4-ftp-browse").addEventListener("click", browsePs4Ftp);
+$("ps4-ftp-up").addEventListener("click", () => {
+  const field = $("ps4-ftp-path");
+  const parts = (field.value.trim() || "/").split("/").filter(Boolean);
+  parts.pop();
+  field.value = parts.length ? "/" + parts.join("/") : "/";
+  browsePs4Ftp();
+});
+$("ps4-ftp-path").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") browsePs4Ftp();
+});
+$("ps4-ftp-host").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") browsePs4Ftp();
+});
 $("workspace-refresh").addEventListener("click", refreshWorkspace);
 $("workspace-search").addEventListener("input", renderWorkspace);
 $("workspace-kind-filter").addEventListener("change", renderWorkspace);
