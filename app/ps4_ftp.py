@@ -61,3 +61,38 @@ def list_media(host: str, port: int = 2121, path: str = "/", timeout: float = 4.
             ftp.quit()
         except Exception:
             pass
+
+
+def download_media(host: str, port: int, path: str, max_bytes: int = 512 * 1024 * 1024) -> tuple[str, bytes]:
+    """Download one whitelisted media file from the private PS4 FTP server."""
+    host, port, normalized = validate_target(host, port, path)
+    name = posixpath.basename(normalized)
+    if not name or name in {".", ".."} or posixpath.dirname(normalized) == normalized:
+        raise ValueError("Choose a media file, not a folder.")
+    if posixpath.splitext(name)[1].lower() not in MEDIA_EXTENSIONS:
+        raise ValueError("That file type is not supported.")
+    ftp = ftplib.FTP()
+    chunks: list[bytes] = []
+    total = 0
+    try:
+        ftp.connect(host, port, timeout=8.0)
+        ftp.login()
+        def receive(block: bytes) -> None:
+            nonlocal total
+            total += len(block)
+            if total > max_bytes:
+                raise ValueError("The selected file exceeds the 512 MB import limit.")
+            chunks.append(block)
+        ftp.retrbinary(f"RETR {normalized}", receive, blocksize=64 * 1024)
+        if not total:
+            raise ValueError("The selected file is empty.")
+        return name, b"".join(chunks)
+    except ValueError:
+        raise
+    except ftplib.all_errors as exc:
+        raise ValueError("Could not download that file from GoldHEN FTP. Check its path and FTP connection.") from exc
+    finally:
+        try:
+            ftp.quit()
+        except Exception:
+            pass
