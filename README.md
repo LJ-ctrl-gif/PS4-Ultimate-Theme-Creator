@@ -56,6 +56,28 @@ install Termux's packaged NumPy with `pkg install python-numpy`, then retry
 the launcher. Android is a local artwork-editing route; it does not provide
 the Windows-only proprietary PS4 package toolchain.
 
+### Browse and import media from a PS4
+
+The Package tab includes a **read-only GoldHEN FTP browser** for a PS4 on the
+same trusted private Wi-Fi network. Enter the console's private IPv4 address
+and browse folders on port **2121**. The browser lists supported images,
+audio files and videos; choose an editor slot and use **Import to editor**.
+The import endpoint validates the destination and file type before fetching
+the file, and limits each transfer to 512 MB. FTP access is read-only: this
+feature does not upload, delete, rename or modify files on the console.
+
+For a console using the default GoldHEN FTP configuration, the host field can
+be set to the PS4's LAN address (for example, `192.168.1.23`). GoldHEN FTP
+must be enabled and the phone and console must be on the same trusted network.
+Do not expose FTP or the local editor server to the public internet.
+
+Video files are decoded by FFmpeg into preview frames for the editor's RAF
+animated-background workflow; the original MP4 is not embedded as a native
+PS4 video background. Audio import still follows the slot's output format:
+menu music requires ATRAC9 `.at9` (or the optional encoder), while effects
+are prepared for the supported VAG workflow. Actual transfer should be tested
+with the console online on the same LAN.
+
 ---
 
 ## Requirements
