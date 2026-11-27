@@ -33,6 +33,18 @@ class MockPackageUiTests(unittest.TestCase):
 
 
 
+    def test_lan_transfer_shows_exact_host_link_and_copy_action(self):
+        js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
+        start = js.index("async function exportThemeSource()")
+        end = js.index("\\nasync function packageBuild()", start)
+        export = js[start:end]
+        self.assertIn('id="theme-transfer-url"', export)
+        self.assertIn('id="theme-transfer-copy"', export)
+        self.assertIn('location.hostname', export)
+        self.assertIn('navigator.clipboard.writeText(transferUrl)', export)
+        self.assertIn('$("theme-transfer-url").textContent = transferUrl', export)
+        self.assertIn("temporary link exposes only this ZIP", export)
+
     def test_real_package_result_escapes_server_values(self):
         js = (ROOT / "app/static/app.js").read_text(encoding="utf-8")
         start = js.index("async function packageBuild()")
