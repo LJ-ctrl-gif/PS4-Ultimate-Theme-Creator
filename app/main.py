@@ -744,6 +744,33 @@ def ps4_ftp_import(
     gain_db: float = Form(0.0),
 ) -> dict:
     """Copy one PS4 media file into a normal image or audio editor slot."""
+    # Validate the requested destination and remote path extension before
+    # opening an FTP data connection or downloading a potentially large file.
+    suffix = Path(path).suffix.lower()
+    if kind == "video":
+        if slot_id != "animated":
+            raise HTTPException(422, "Video imports must target the animated background.")
+        allowed = VIDEO_EXTS
+    elif kind == "image":
+        spec = IMAGE_SLOTS.get(slot_id)
+        if spec is None:
+            raise HTTPException(404, "Unknown image slot.")
+        allowed = IMAGE_EXTS
+    elif kind == "audio":
+        spec = AUDIO_SLOTS.get(slot_id)
+        if spec is None:
+            raise HTTPException(404, "Unknown audio slot.")
+        allowed = spec["exts"] or SOUND_EXTS
+        if spec["convert"] is False and at9.available():
+            allowed = SOUND_EXTS
+    else:
+        raise HTTPException(422, "Choose an image, audio or video destination.")
+
+    if suffix not in allowed:
+        raise HTTPException(415, "The selected file format is not supported by this destination.")
+    if kind == "audio" and not spec["convert"] and suffix != ".at9" and not at9.available():
+        raise HTTPException(415, "Menu music requires .at9 unless the optional ATRAC9 encoder is installed.")
+
     try:
         filename, data = ps4_ftp.download_media(host, port, path, MAX_UPLOAD_BYTES)
     except ValueError as exc:
@@ -751,18 +778,11 @@ def ps4_ftp_import(
 
     suffix = Path(filename).suffix.lower()
     if kind == "video":
-        if suffix not in VIDEO_EXTS:
-            raise HTTPException(415, "Choose a supported video or animated image.")
         job = jobs.create("animated", filename, data)
         size = _parse_size("")
         return _build_animated_preview(job, _clamp_frames(12, size), size)
 
     if kind == "image":
-        spec = IMAGE_SLOTS.get(slot_id)
-        if spec is None:
-            raise HTTPException(404, "Unknown image slot.")
-        if suffix not in IMAGE_EXTS:
-            raise HTTPException(415, "Choose an image file for an image slot.")
         job = jobs.create("slot", filename, data)
         job.meta["slot"] = slot_id
         job.save()
