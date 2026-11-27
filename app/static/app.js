@@ -1530,9 +1530,7 @@ async function browsePs4Ftp() {
               const imported = await api("/api/ps4/ftp/import", { method: "POST", body: fd });
               if (kind === "video") {
                 $("bgmode-animated").checked = true;
-                $("bgmode-static").checked = false;
-                $("bg-animated").hidden = false;
-                $("bg-static").hidden = true;
+                $("bgmode-animated").dispatchEvent(new Event("change", { bubbles: true }));
                 $("anim-drop").hidden = true;
                 $("anim-workspace").hidden = false;
                 $("anim-result").hidden = true;
