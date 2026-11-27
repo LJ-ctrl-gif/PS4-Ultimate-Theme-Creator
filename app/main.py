@@ -734,6 +734,59 @@ def _resolve_slot_jobs(raw: dict[str, str]) -> dict[str, jobs.Job]:
             resolved[slot_id] = direct[source]
     return resolved
 
+@app.post("/api/ps4/ftp/import")
+def ps4_ftp_import(
+    host: str = Form(...),
+    port: int = Form(2121),
+    path: str = Form(...),
+    kind: str = Form(...),
+    slot_id: str = Form(...),
+    gain_db: float = Form(0.0),
+) -> dict:
+    """Copy one PS4 media file into a normal image or audio editor slot."""
+    try:
+        filename, data = ps4_ftp.download_media(host, port, path, MAX_UPLOAD_BYTES)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    suffix = Path(filename).suffix.lower()
+    if kind == "image":
+        spec = IMAGE_SLOTS.get(slot_id)
+        if spec is None:
+            raise HTTPException(404, "Unknown image slot.")
+        if suffix not in IMAGE_EXTS:
+            raise HTTPException(415, "Choose an image file for an image slot.")
+        job = jobs.create("slot", filename, data)
+        job.meta["slot"] = slot_id
+        job.save()
+        info = media.probe(job.source)
+        preview = media.render_image(job.source, job.preview_dir / "preview.webp", spec["size"])
+        return {
+            "kind": "image", "slot": slot_id, "job_id": job.id,
+            "preview": f"/api/slot/{job.id}/preview?v={int(time.time() * 1000)}",
+            "bytes": preview.stat().st_size, "target": list(spec["size"]),
+            "path": spec["path"],
+            "source": {"name": job.original_name, "width": info.width, "height": info.height},
+        }
+
+    if kind == "audio":
+        spec = AUDIO_SLOTS.get(slot_id)
+        if spec is None:
+            raise HTTPException(404, "Unknown audio slot.")
+        allowed = spec["exts"] or SOUND_EXTS
+        if spec["convert"] is False and at9.available():
+            allowed = SOUND_EXTS
+        if suffix not in allowed:
+            raise HTTPException(415, "That audio format is not supported by the selected slot.")
+        if not spec["convert"] and suffix != ".at9" and not at9.available():
+            raise HTTPException(415, "Menu music requires .at9 unless the optional ATRAC9 encoder is installed.")
+        job = jobs.create("audio", filename, data)
+        job.meta["slot"] = slot_id
+        return _procesar_audio(job, spec, _clamp_gain(gain_db))
+
+    raise HTTPException(422, "Choose an image or audio destination.")
+
+
 @app.get("/api/audio/{job_id}/info")
 def audio_info(job_id: str) -> dict:
     """Data about an already uploaded audio.
