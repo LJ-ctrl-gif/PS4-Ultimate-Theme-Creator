@@ -69,7 +69,7 @@ class Ps4FtpImportEndpointTests(unittest.TestCase):
     def test_audio_import_routes_to_audio_processor(self):
         with (
             patch.object(main.ps4_ftp, "download_media", return_value=("effect.wav", b"wav")) as download,
-            patch.object(main.jobs, "create", return_value=SimpleNamespace(id="audio-job")),
+            patch.object(main.jobs, "create", return_value=SimpleNamespace(id="audio-job", meta={})),
             patch.object(main, "_procesar_audio", return_value={"kind": "audio", "job_id": "audio-job"}) as process,
             patch.object(main.at9, "available", return_value=False),
         ):
